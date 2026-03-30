@@ -1,0 +1,116 @@
+﻿version: "3.8"
+
+services:
+
+  # ──────────────────────────────────────────
+  # MySQL Databases (one per service)
+  # ──────────────────────────────────────────
+
+  mysql-auth:
+    image: mysql:8.0
+    container_name: veltro-mysql-auth
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: veltro_auth
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-auth-data:/var/lib/mysql
+    networks:
+      - veltro-net
+
+  mysql-user:
+    image: mysql:8.0
+    container_name: veltro-mysql-user
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: veltro_user
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql-user-data:/var/lib/mysql
+    networks:
+      - veltro-net
+
+  mysql-subscription:
+    image: mysql:8.0
+    container_name: veltro-mysql-subscription
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: veltro_subscription
+    ports:
+      - "3309:3306"
+    volumes:
+      - mysql-subscription-data:/var/lib/mysql
+    networks:
+      - veltro-net
+
+  mysql-booking:
+    image: mysql:8.0
+    container_name: veltro-mysql-booking
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: veltro_booking
+    ports:
+      - "3310:3306"
+    volumes:
+      - mysql-booking-data:/var/lib/mysql
+    networks:
+      - veltro-net
+
+  mysql-activity:
+    image: mysql:8.0
+    container_name: veltro-mysql-activity
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: veltro_activity
+    ports:
+      - "3311:3306"
+    volumes:
+      - mysql-activity-data:/var/lib/mysql
+    networks:
+      - veltro-net
+
+  mysql-shop:
+    image: mysql:8.0
+    container_name: veltro-mysql-shop
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: veltro_shop
+    ports:
+      - "3312:3306"
+    volumes:
+      - mysql-shop-data:/var/lib/mysql
+    networks:
+      - veltro-net
+
+  # ──────────────────────────────────────────
+  # RabbitMQ
+  # ──────────────────────────────────────────
+
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    container_name: veltro-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: veltro
+      RABBITMQ_DEFAULT_PASS: veltro123
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - veltro-net
+
+volumes:
+  mysql-auth-data:
+  mysql-user-data:
+  mysql-subscription-data:
+  mysql-booking-data:
+  mysql-activity-data:
+  mysql-shop-data:
+  rabbitmq-data:
+
+networks:
+  veltro-net:
+    driver: bridge
