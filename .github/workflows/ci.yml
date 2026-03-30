@@ -1,0 +1,56 @@
+name: Veltro CI
+
+on:
+  push:
+    branches: [ develop, main ]
+  pull_request:
+    branches: [ develop, main ]
+
+jobs:
+  build-eureka:
+    name: Build Eureka Server
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Build Eureka Server
+        working-directory: backend/eureka-server
+        run: ./mvnw clean package -DskipTests
+
+  build-gateway:
+    name: Build API Gateway
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Build API Gateway
+        working-directory: backend/api-gateway
+        run: ./mvnw clean package -DskipTests
+
+  build-common-lib:
+    name: Build Common Lib
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Build Common Lib
+        working-directory: backend/common-lib
+        run: mvn clean install
