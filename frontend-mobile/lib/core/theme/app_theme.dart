@@ -15,7 +15,6 @@ class AppTheme {
       colorScheme: const ColorScheme.dark(
         primary: purple,
         onPrimary: white,
-        background: darkBg,
         surface: Color(0xFF1A1A1A),
         onSurface: white,
       ),
