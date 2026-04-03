@@ -19,12 +19,17 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Make mvnw executable
+        working-directory: backend/eureka-server
+        run: chmod +x mvnw
+
       - name: Build Eureka Server
         working-directory: backend/eureka-server
         run: ./mvnw clean package -DskipTests
 
   build-gateway:
     name: Build API Gateway
+    needs: build-common-lib
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -34,6 +39,14 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
+
+      - name: Make mvnw executable
+        working-directory: backend/api-gateway
+        run: chmod +x mvnw
+
+      - name: Install common-lib
+        working-directory: backend/common-lib
+        run: mvn install
 
       - name: Build API Gateway
         working-directory: backend/api-gateway
