@@ -23,6 +23,12 @@ jobs:
         run: |
           chmod +x backend/eureka-server/mvnw
           chmod +x backend/api-gateway/mvnw
+      
+      - name: Make mvnw executable
+        run: |
+          chmod +x backend/eureka-server/mvnw
+          chmod +x backend/api-gateway/mvnw
+          chmod +x backend/auth-service/mvnw
 
       - name: Build and install common-lib
         working-directory: backend/common-lib
@@ -35,3 +41,10 @@ jobs:
       - name: Build API Gateway
         working-directory: backend/api-gateway
         run: ./mvnw clean package -DskipTests
+
+      - name: Make auth-service mvnw executable
+        run: chmod +x backend/auth-service/mvnw
+
+      - name: Build and test Auth Service
+        working-directory: backend/auth-service
+        run: ./mvnw clean verify
