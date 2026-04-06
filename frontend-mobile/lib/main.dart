@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/theme/app_theme.dart';
+import 'router/app_router.dart';
 
 void main() {
   runApp(
@@ -15,22 +16,11 @@ class VeltroApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'Veltro',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
-      home: const Scaffold(
-        body: Center(
-          child: Text(
-            'Veltro',
-            style: TextStyle(
-              color: AppTheme.purple,
-              fontSize: 48,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-      ),
+      theme: AppTheme.lightTheme,
+      routerConfig: appRouter,
     );
   }
 }
