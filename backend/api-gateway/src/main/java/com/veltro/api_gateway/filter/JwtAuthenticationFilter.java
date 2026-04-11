@@ -52,13 +52,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
             // Extract user info and forward as headers
-            String userId = jwtUtil.extractSubject(token);
-            String role = jwtUtil.extractClaim(token, "role");
+            String role   = jwtUtil.extractClaim(token, "role");
+            String userId = jwtUtil.extractClaim(token, "userId");
+            if (userId == null) {
+                userId = jwtUtil.extractSubject(token); // fallback — never breaks existing behaviour
+            }
 
-            // Wrap request to add custom headers
             MutableHttpServletRequest mutableRequest = new MutableHttpServletRequest(request);
-            mutableRequest.putHeader("X-User-Id", userId);
-            mutableRequest.putHeader("X-User-Role", role != null ? role : "");
+            mutableRequest.putHeader("X-User-Id",   userId != null ? userId : "");
+            mutableRequest.putHeader("X-User-Role", role   != null ? role   : "");
 
             filterChain.doFilter(mutableRequest, response);
 

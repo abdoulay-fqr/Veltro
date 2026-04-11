@@ -8,12 +8,6 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
-/**
- * User-service trusts the API Gateway to enforce JWT authentication.
- * The Gateway forwards X-User-Id and X-User-Role headers after token validation.
- * This service only reads those headers — it does NOT re-validate JWT tokens.
- * All endpoints are permitted here; role checks are done in the service layer.
- */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
