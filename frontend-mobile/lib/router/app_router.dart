@@ -6,6 +6,7 @@ import '../features/auth/presentation/register_screen.dart';
 import '../features/home/presentation/home_screen.dart';
 import '../features/profile/presentation/profile_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
+import '../features/subscription/presentation/subscription_screen.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/',
@@ -36,6 +37,13 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/settings',
       builder: (context, state) => const SettingsScreen(),
+    ),
+    GoRoute(
+      path: '/subscription/:id',
+      builder: (context, state) {
+        final id = int.tryParse(state.pathParameters['id'] ?? '0') ?? 0;
+        return SubscriptionScreen(memberProfileId: id);
+      },
     ),
     GoRoute(
       path: '/dashboard',

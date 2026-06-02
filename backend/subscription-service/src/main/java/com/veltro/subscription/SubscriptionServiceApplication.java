@@ -1,0 +1,17 @@
+package com.veltro.subscription;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration;
+import org.springframework.scheduling.annotation.EnableScheduling;
+
+@SpringBootApplication(
+        scanBasePackages = "com.veltro.subscription",
+        exclude = {UserDetailsServiceAutoConfiguration.class}
+)
+@EnableScheduling
+public class SubscriptionServiceApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(SubscriptionServiceApplication.class, args);
+    }
+}

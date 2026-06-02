@@ -52,6 +52,13 @@ class HomeScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
             _QuickAction(
+              icon: Icons.card_membership_outlined,
+              title: 'My Subscription',
+              subtitle: 'View plan, invoices and billing',
+              onTap: () => context.push('/subscription/1'),
+            ),
+            const SizedBox(height: 12),
+            _QuickAction(
               icon: Icons.settings_outlined,
               title: 'Settings',
               subtitle: 'Notifications, password, account',

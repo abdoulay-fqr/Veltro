@@ -8,6 +8,8 @@ import {
   UserCheck,
   LayoutDashboard,
   CreditCard,
+  BarChart2,
+  Receipt,
   LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -17,6 +19,8 @@ const adminNav = [
   { label: "Members", href: "/dashboard/members", icon: Users },
   { label: "Coaches", href: "/dashboard/coaches", icon: UserCheck },
   { label: "NFC Simulator", href: "/dashboard/coaches?tab=nfc", icon: CreditCard },
+  { label: "Subscriptions", href: "/dashboard/subscriptions", icon: Receipt },
+  { label: "Reports", href: "/dashboard/subscriptions/reports", icon: BarChart2 },
 ];
 
 const coachNav = [
