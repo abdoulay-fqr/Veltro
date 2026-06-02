@@ -1,15 +1,19 @@
 package com.veltro.user.service;
 
+import com.veltro.user.config.RabbitMQConfig;
 import com.veltro.user.dto.NfcActivateRequest;
 import com.veltro.user.dto.NfcCardResponse;
 import com.veltro.user.dto.SimulateScanResponse;
+import com.veltro.user.entity.MemberProfile;
 import com.veltro.user.entity.NfcCard;
 import com.veltro.user.entity.NfcCardStatus;
+import com.veltro.user.event.NfcCardActivatedEvent;
 import com.veltro.user.exception.ConflictException;
 import com.veltro.user.exception.ResourceNotFoundException;
 import com.veltro.user.repository.MemberProfileRepository;
 import com.veltro.user.repository.NfcCardRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,25 +25,37 @@ public class NfcService {
 
     private final NfcCardRepository nfcCardRepository;
     private final MemberProfileRepository memberProfileRepository;
+    private final RabbitTemplate rabbitTemplate;
 
     // ── Activate: assign a new cardUid to a member ──────────────────────────
     @Transactional
     public NfcCardResponse activate(Long memberProfileId, NfcActivateRequest request) {
-        // Member must exist
-        memberProfileRepository.findById(memberProfileId)
+        MemberProfile member = memberProfileRepository.findById(memberProfileId)
                 .orElseThrow(() -> new ResourceNotFoundException("Member not found: " + memberProfileId));
 
-        // cardUid must be globally unique
         nfcCardRepository.findByCardUid(request.getCardUid()).ifPresent(existing -> {
             throw new ConflictException("Card UID already in use: " + request.getCardUid());
         });
 
         NfcCard card = new NfcCard();
-        card.setMemberProfile(memberProfileRepository.getReferenceById(memberProfileId));
+        card.setMemberProfile(member);
         card.setCardUid(request.getCardUid());
         card.setStatus(NfcCardStatus.ACTIVE);
+        NfcCard saved = nfcCardRepository.save(card);
 
-        return new NfcCardResponse(nfcCardRepository.save(card));
+        rabbitTemplate.convertAndSend(
+                RabbitMQConfig.USER_EXCHANGE,
+                RabbitMQConfig.NFC_CARD_ACTIVATED_ROUTING_KEY,
+                new NfcCardActivatedEvent(
+                        saved.getId(),
+                        saved.getCardUid(),
+                        memberProfileId,
+                        member.getUserId(),
+                        member.getFirstname() + " " + member.getLastname()
+                )
+        );
+
+        return new NfcCardResponse(saved);
     }
 
     // ── Deactivate: mark card INACTIVE by cardUid ────────────────────────────

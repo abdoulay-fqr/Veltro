@@ -42,7 +42,13 @@ dependencies:
   
   # Secure storage (for JWT tokens)
   flutter_secure_storage: ^9.2.4
-  
+
+  # Image picker (avatar upload)
+  image_picker: ^1.1.2
+
+  # Cached network images (avatar display)
+  cached_network_image: ^3.4.1
+
   # Icons
   cupertino_icons: ^1.0.8
 
