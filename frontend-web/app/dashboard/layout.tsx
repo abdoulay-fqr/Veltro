@@ -3,6 +3,7 @@
 import { useAuth } from "@/lib/auth/useAuth";
 import AuthSkeleton from "@/components/AuthSkeleton";
 import Sidebar from "@/components/dashboard/Sidebar";
+import ChatWidget from "@/components/ChatWidget";
 import { Toaster } from "sonner";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -25,6 +26,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {children}
       </main>
       <Toaster richColors position="top-right" />
+      <ChatWidget />
     </div>
   );
 }

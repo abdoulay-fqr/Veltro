@@ -80,6 +80,13 @@ class HomeScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
             _QuickAction(
+              icon: Icons.smart_toy_outlined,
+              title: 'AI Assistant',
+              subtitle: 'Ask Veltro about anything',
+              onTap: () => context.push('/chatbot'),
+            ),
+            const SizedBox(height: 12),
+            _QuickAction(
               icon: Icons.chat_bubble_outline,
               title: 'Messages',
               subtitle: 'Chat with your coach',

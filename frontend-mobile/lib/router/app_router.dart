@@ -14,6 +14,7 @@ import '../features/messaging/presentation/chats_screen.dart';
 import '../features/messaging/presentation/chat_screen.dart';
 import '../features/shop/presentation/shop_screen.dart';
 import '../features/shop/presentation/cart_screen.dart';
+import '../features/chatbot/presentation/chatbot_screen.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/',
@@ -62,6 +63,7 @@ final appRouter = GoRouter(
     ),
     GoRoute(path: '/shop', builder: (_, __) => const ShopScreen()),
     GoRoute(path: '/cart', builder: (_, __) => const CartScreen()),
+    GoRoute(path: '/chatbot', builder: (_, __) => const ChatbotScreen()),
     GoRoute(path: '/dashboard', builder: (_, __) => const _PlaceholderScreen(title: 'Dashboard')),
     GoRoute(path: '/coach', builder: (_, __) => const _PlaceholderScreen(title: 'Coach Portal')),
   ],
