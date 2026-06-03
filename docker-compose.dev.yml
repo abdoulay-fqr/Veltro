@@ -313,7 +313,7 @@ services:
     build:
       context: ./backend
       dockerfile: messaging-service/Dockerfile
-    ports: ["8087:8087"]
+    ports: ["8097:8087"]
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql-messaging:3306/veltro_messaging?useSSL=false&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: root

@@ -17,6 +17,9 @@ public class RabbitMQConfig {
     public static final String NOTIFICATION_SUB_EXPIRING_QUEUE    = "veltro.notification.subscription-expiring.queue";
     public static final String NOTIFICATION_DLX                   = "veltro.notification.dlx";
     public static final String NOTIFICATION_SUB_EXPIRING_DLQ      = "veltro.notification.subscription-expiring.dlq";
+    // DLQ declared here so it exists even when activity-service starts after notification-service
+    public static final String NOTIFICATION_LOW_ACTIVITY_ALERT_DLQ =
+            "veltro.notification.low-activity-alert.queue.dlq";
 
     @Value("${notification.retry.max-attempts:3}")
     private int maxAttempts;
@@ -62,6 +65,20 @@ public class RabbitMQConfig {
                 .bind(notificationSubExpiringDlq)
                 .to(notificationDlx)
                 .with(NOTIFICATION_SUB_EXPIRING_DLQ);
+    }
+
+    @Bean
+    public Queue notificationLowActivityAlertDlq() {
+        return new Queue(NOTIFICATION_LOW_ACTIVITY_ALERT_DLQ, true);
+    }
+
+    @Bean
+    public Binding notificationLowActivityAlertDlqBinding(
+            Queue notificationLowActivityAlertDlq, DirectExchange notificationDlx) {
+        return BindingBuilder
+                .bind(notificationLowActivityAlertDlq)
+                .to(notificationDlx)
+                .with(NOTIFICATION_LOW_ACTIVITY_ALERT_DLQ);
     }
 
     @Bean
