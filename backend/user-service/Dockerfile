@@ -3,13 +3,13 @@ WORKDIR /build
 COPY common-lib/pom.xml common-lib/pom.xml
 COPY common-lib/src common-lib/src
 RUN mvn -f common-lib/pom.xml install -DskipTests -q
-COPY api-gateway/pom.xml api-gateway/pom.xml
-RUN mvn -f api-gateway/pom.xml dependency:go-offline -q
-COPY api-gateway/src api-gateway/src
-RUN mvn -f api-gateway/pom.xml clean package -DskipTests -q
+COPY user-service/pom.xml user-service/pom.xml
+RUN mvn -f user-service/pom.xml dependency:go-offline -q
+COPY user-service/src user-service/src
+RUN mvn -f user-service/pom.xml clean package -DskipTests -q
 
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
-COPY --from=build /build/api-gateway/target/*.jar app.jar
-EXPOSE 8080
+COPY --from=build /build/user-service/target/*.jar app.jar
+EXPOSE 8082
 ENTRYPOINT ["java", "-jar", "app.jar"]

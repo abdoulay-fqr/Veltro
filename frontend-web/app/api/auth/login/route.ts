@@ -3,7 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(req: NextRequest) {
   const body = await req.json();
 
-  const res = await fetch("http://localhost:8080/api/v1/auth/login", {
+  const GATEWAY = process.env.API_GATEWAY_URL ?? "http://localhost:8080";
+  const res = await fetch(`${GATEWAY}/api/v1/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),

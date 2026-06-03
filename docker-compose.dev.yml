@@ -1,105 +1,104 @@
-﻿version: "3.8"
+version: "3.8"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Veltro — full local stack
+#
+#   docker compose -f docker-compose.dev.yml up --build
+#
+# First build takes 10-20 min (Maven downloads). Subsequent builds use the
+# Docker layer cache and are much faster.
+#
+# Required env var in .env:
+#   GEMINI_API_KEY   (chatbot — sign up at aistudio.google.com)
+#
+# Optional:
+#   MAILTRAP_USERNAME / MAILTRAP_PASSWORD  (email notifications)
+# ─────────────────────────────────────────────────────────────────────────────
+
+x-mysql-common: &mysql-common
+  image: mysql:8.0
+  environment:
+    MYSQL_ROOT_PASSWORD: root
+  networks: [veltro-net]
+  healthcheck:
+    test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+    interval: 10s
+    timeout: 5s
+    retries: 10
+    start_period: 30s
+
+x-spring-common: &spring-common
+  networks: [veltro-net]
+  restart: on-failure
 
 services:
 
-  # ──────────────────────────────────────────
-  # MySQL Databases (one per service)
-  # ──────────────────────────────────────────
+  # ── Databases ──────────────────────────────────────────────────────────────
 
   mysql-auth:
-    image: mysql:8.0
+    <<: *mysql-common
     container_name: veltro-mysql-auth
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: veltro_auth
-    ports:
-      - "3307:3306"
-    volumes:
-      - mysql-auth-data:/var/lib/mysql
-    networks:
-      - veltro-net
+    ports: ["3307:3306"]
+    volumes: [mysql-auth-data:/var/lib/mysql]
 
   mysql-user:
-    image: mysql:8.0
+    <<: *mysql-common
     container_name: veltro-mysql-user
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: veltro_user
-    ports:
-      - "3308:3306"
-    volumes:
-      - mysql-user-data:/var/lib/mysql
-    networks:
-      - veltro-net
+    ports: ["3308:3306"]
+    volumes: [mysql-user-data:/var/lib/mysql]
 
   mysql-subscription:
-    image: mysql:8.0
+    <<: *mysql-common
     container_name: veltro-mysql-subscription
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: veltro_subscription
-    ports:
-      - "3309:3306"
-    volumes:
-      - mysql-subscription-data:/var/lib/mysql
-    networks:
-      - veltro-net
+    ports: ["3309:3306"]
+    volumes: [mysql-subscription-data:/var/lib/mysql]
 
   mysql-booking:
-    image: mysql:8.0
+    <<: *mysql-common
     container_name: veltro-mysql-booking
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: veltro_booking
-    ports:
-      - "3310:3306"
-    volumes:
-      - mysql-booking-data:/var/lib/mysql
-    networks:
-      - veltro-net
+    ports: ["3310:3306"]
+    volumes: [mysql-booking-data:/var/lib/mysql]
 
   mysql-activity:
-    image: mysql:8.0
+    <<: *mysql-common
     container_name: veltro-mysql-activity
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: veltro_activity
-    ports:
-      - "3311:3306"
-    volumes:
-      - mysql-activity-data:/var/lib/mysql
-    networks:
-      - veltro-net
+    ports: ["3311:3306"]
+    volumes: [mysql-activity-data:/var/lib/mysql]
 
   mysql-shop:
-    image: mysql:8.0
+    <<: *mysql-common
     container_name: veltro-mysql-shop
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: veltro_shop
-    ports:
-      - "3312:3306"
-    volumes:
-      - mysql-shop-data:/var/lib/mysql
-    networks:
-      - veltro-net
+    ports: ["3312:3306"]
+    volumes: [mysql-shop-data:/var/lib/mysql]
 
   mysql-messaging:
-    image: mysql:8.0
+    <<: *mysql-common
     container_name: veltro-mysql-messaging
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: veltro_messaging
-    ports:
-      - "3313:3306"
-    volumes:
-      - mysql-messaging-data:/var/lib/mysql
-    networks:
-      - veltro-net
+    ports: ["3313:3306"]
+    volumes: [mysql-messaging-data:/var/lib/mysql]
 
-  # ──────────────────────────────────────────
-  # RabbitMQ
-  # ──────────────────────────────────────────
+  # ── Message broker ─────────────────────────────────────────────────────────
 
   rabbitmq:
     image: rabbitmq:3.12-management
@@ -110,10 +109,289 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+    volumes: [rabbitmq-data:/var/lib/rabbitmq]
+    networks: [veltro-net]
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # ── Service registry ───────────────────────────────────────────────────────
+
+  eureka-server:
+    <<: *spring-common
+    container_name: veltro-eureka
+    build:
+      context: ./backend
+      dockerfile: eureka-server/Dockerfile
+    ports: ["8761:8761"]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8761/actuator/health | grep -q UP || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 40s
+
+  # ── API gateway ────────────────────────────────────────────────────────────
+
+  api-gateway:
+    <<: *spring-common
+    container_name: veltro-gateway
+    build:
+      context: ./backend
+      dockerfile: api-gateway/Dockerfile
+    ports: ["8080:8080"]
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health | grep -q UP || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 40s
+
+  # ── Auth service ───────────────────────────────────────────────────────────
+
+  auth-service:
+    <<: *spring-common
+    container_name: veltro-auth
+    build:
+      context: ./backend
+      dockerfile: auth-service/Dockerfile
+    ports: ["8081:8081"]
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-auth:3306/veltro_auth?useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    depends_on:
+      mysql-auth:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+
+  # ── User service ───────────────────────────────────────────────────────────
+
+  user-service:
+    <<: *spring-common
+    container_name: veltro-user
+    build:
+      context: ./backend
+      dockerfile: user-service/Dockerfile
+    ports: ["8082:8082"]
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-user:3306/veltro_user?useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_USERNAME: veltro
+      SPRING_RABBITMQ_PASSWORD: veltro123
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      APP_AVATAR_UPLOAD_DIR: /data/avatars
     volumes:
-      - rabbitmq-data:/var/lib/rabbitmq
-    networks:
-      - veltro-net
+      - user-avatars:/data/avatars
+    depends_on:
+      mysql-user:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+
+  # ── Subscription service ───────────────────────────────────────────────────
+
+  subscription-service:
+    <<: *spring-common
+    container_name: veltro-subscription
+    build:
+      context: ./backend
+      dockerfile: subscription-service/Dockerfile
+    ports: ["8083:8083"]
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-subscription:3306/veltro_subscription?useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_USERNAME: veltro
+      SPRING_RABBITMQ_PASSWORD: veltro123
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      USER_SERVICE_BASE_URL: http://user-service:8082
+    depends_on:
+      mysql-subscription:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+
+  # ── Booking service ────────────────────────────────────────────────────────
+
+  booking-service:
+    <<: *spring-common
+    container_name: veltro-booking
+    build:
+      context: ./backend
+      dockerfile: booking-service/Dockerfile
+    ports: ["8084:8084"]
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-booking:3306/veltro_booking?useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_USERNAME: veltro
+      SPRING_RABBITMQ_PASSWORD: veltro123
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      CLIENTS_SUBSCRIPTION_URL: http://subscription-service:8083
+      CLIENTS_USER_URL: http://user-service:8082
+    depends_on:
+      mysql-booking:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+
+  # ── Activity service ───────────────────────────────────────────────────────
+
+  activity-service:
+    <<: *spring-common
+    container_name: veltro-activity
+    build:
+      context: ./backend
+      dockerfile: activity-service/Dockerfile
+    ports: ["8085:8085"]
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-activity:3306/veltro_activity?useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_USERNAME: veltro
+      SPRING_RABBITMQ_PASSWORD: veltro123
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      CLIENTS_USER_URL: http://user-service:8082
+    depends_on:
+      mysql-activity:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+
+  # ── Notification service ───────────────────────────────────────────────────
+
+  notification-service:
+    <<: *spring-common
+    container_name: veltro-notification
+    build:
+      context: ./backend
+      dockerfile: notification-service/Dockerfile
+    ports: ["8086:8086"]
+    environment:
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_USERNAME: veltro
+      SPRING_RABBITMQ_PASSWORD: veltro123
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_MAIL_HOST: smtp.mailtrap.io
+      SPRING_MAIL_PORT: "2525"
+      SPRING_MAIL_USERNAME: ${MAILTRAP_USERNAME:-}
+      SPRING_MAIL_PASSWORD: ${MAILTRAP_PASSWORD:-}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+
+  # ── Messaging service ──────────────────────────────────────────────────────
+
+  messaging-service:
+    <<: *spring-common
+    container_name: veltro-messaging
+    build:
+      context: ./backend
+      dockerfile: messaging-service/Dockerfile
+    ports: ["8087:8087"]
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-messaging:3306/veltro_messaging?useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_USERNAME: veltro
+      SPRING_RABBITMQ_PASSWORD: veltro123
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    depends_on:
+      mysql-messaging:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+
+  # ── Shop service ───────────────────────────────────────────────────────────
+
+  shop-service:
+    <<: *spring-common
+    container_name: veltro-shop
+    build:
+      context: ./backend
+      dockerfile: shop-service/Dockerfile
+    ports: ["8088:8088"]
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-shop:3306/veltro_shop?useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_USERNAME: veltro
+      SPRING_RABBITMQ_PASSWORD: veltro123
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    depends_on:
+      mysql-shop:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+
+  # ── Chatbot service ────────────────────────────────────────────────────────
+
+  chatbot-service:
+    <<: *spring-common
+    container_name: veltro-chatbot
+    build:
+      context: ./backend
+      dockerfile: chatbot-service/Dockerfile
+    ports: ["8089:8089"]
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      CLIENTS_SUBSCRIPTION_URL: http://subscription-service:8083
+      CLIENTS_BOOKING_URL: http://booking-service:8084
+      CLIENTS_ACTIVITY_URL: http://activity-service:8085
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-your-gemini-api-key-here}
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+
+  # ── Frontend ───────────────────────────────────────────────────────────────
+
+  frontend:
+    container_name: veltro-frontend
+    build:
+      context: ./frontend-web
+      dockerfile: Dockerfile
+    ports: ["3000:3000"]
+    environment:
+      # Used by Next.js API routes (server-side) to reach the gateway container
+      API_GATEWAY_URL: http://api-gateway:8080
+      NODE_ENV: production
+    networks: [veltro-net]
+    depends_on:
+      api-gateway:
+        condition: service_healthy
 
 volumes:
   mysql-auth-data:
@@ -124,6 +402,7 @@ volumes:
   mysql-shop-data:
   mysql-messaging-data:
   rabbitmq-data:
+  user-avatars:
 
 networks:
   veltro-net:

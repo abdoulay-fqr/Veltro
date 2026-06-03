@@ -6,7 +6,8 @@ export async function POST(req: NextRequest) {
   // Best-effort: blacklist token on backend
   if (accessToken) {
     try {
-      await fetch("http://localhost:8080/api/v1/auth/logout", {
+      const GATEWAY = process.env.API_GATEWAY_URL ?? "http://localhost:8080";
+      await fetch(`${GATEWAY}/api/v1/auth/logout`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

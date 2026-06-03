@@ -7,7 +7,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: "No refresh token" }, { status: 401 });
   }
 
-  const res = await fetch("http://localhost:8080/api/v1/auth/refresh", {
+  const GATEWAY = process.env.API_GATEWAY_URL ?? "http://localhost:8080";
+  const res = await fetch(`${GATEWAY}/api/v1/auth/refresh`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ refreshToken }),
