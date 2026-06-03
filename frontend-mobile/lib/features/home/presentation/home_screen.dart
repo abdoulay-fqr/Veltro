@@ -66,6 +66,13 @@ class HomeScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
             _QuickAction(
+              icon: Icons.bar_chart_outlined,
+              title: 'My Performance',
+              subtitle: 'Stats, streak, and personal records',
+              onTap: () => context.push('/activity/1'),
+            ),
+            const SizedBox(height: 12),
+            _QuickAction(
               icon: Icons.calendar_today_outlined,
               title: 'My Bookings',
               subtitle: 'Upcoming, past, and cancelled',

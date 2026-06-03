@@ -9,6 +9,7 @@ import '../features/settings/presentation/settings_screen.dart';
 import '../features/subscription/presentation/subscription_screen.dart';
 import '../features/booking/presentation/courses_screen.dart';
 import '../features/booking/presentation/my_bookings_screen.dart';
+import '../features/activity/presentation/activity_screen.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/',
@@ -38,6 +39,13 @@ final appRouter = GoRouter(
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['memberId'] ?? '0') ?? 0;
         return MyBookingsScreen(memberId: id);
+      },
+    ),
+    GoRoute(
+      path: '/activity/:id',
+      builder: (context, state) {
+        final id = int.tryParse(state.pathParameters['id'] ?? '1') ?? 1;
+        return ActivityScreen(memberProfileId: id);
       },
     ),
     GoRoute(path: '/dashboard', builder: (_, __) => const _PlaceholderScreen(title: 'Dashboard')),

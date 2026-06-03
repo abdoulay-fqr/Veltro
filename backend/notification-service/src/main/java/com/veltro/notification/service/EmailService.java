@@ -84,4 +84,11 @@ public class EmailService {
             "Hi there,\n\nThis is a reminder that \"" + courseName + "\" starts in about 2 hours at " + formatted
             + (room != null ? " in " + room : "") + ".\n\nSee you there!\n\n— The Veltro Team");
     }
+
+    public void sendLowActivityAlertEmail(String to, int sessionCount, java.time.LocalDate weekStart) {
+        send(to,
+            "Keep it up — your activity this week",
+            "Hi there,\n\nYou've had " + sessionCount + " session(s) this week (starting " + weekStart + ").\n\n"
+            + "Head to the gym or book a class to stay on track!\n\n— The Veltro Team");
+    }
 }

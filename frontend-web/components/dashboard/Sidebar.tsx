@@ -13,6 +13,7 @@ import {
   CalendarDays,
   ClipboardCheck,
   TrendingUp,
+  Activity,
   LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -25,6 +26,7 @@ const adminNav = [
   { label: "Subscriptions", href: "/dashboard/subscriptions", icon: Receipt },
   { label: "Revenue Reports", href: "/dashboard/subscriptions/reports", icon: BarChart2 },
   { label: "Course Stats", href: "/dashboard/admin/courses", icon: TrendingUp },
+  { label: "Activity", href: "/dashboard/activity", icon: Activity },
 ];
 
 const coachNav = [
