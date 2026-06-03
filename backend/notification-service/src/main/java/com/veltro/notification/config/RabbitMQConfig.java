@@ -3,7 +3,6 @@ package com.veltro.notification.config;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
-import org.springframework.amqp.rabbit.retry.RejectAndDontRequeueRecoverer;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -77,11 +76,12 @@ public class RabbitMQConfig {
         factory.setConnectionFactory(connectionFactory);
         factory.setMessageConverter(converter);
         factory.setDefaultRequeueRejected(false);
+        // defaultRequeueRejected=false above ensures messages exhausting all retries
+        // are rejected (not requeued) and routed to the DLQ via x-dead-letter-exchange.
         factory.setAdviceChain(
                 RetryInterceptorBuilder.stateless()
                         .maxAttempts(maxAttempts)
                         .backOffOptions(backoffDelay, 2.0, 30_000)
-                        .recoverer(new RejectAndDontRequeueRecoverer())
                         .build()
         );
         return factory;
