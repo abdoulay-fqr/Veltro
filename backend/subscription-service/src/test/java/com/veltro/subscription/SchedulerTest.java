@@ -99,7 +99,7 @@ class SchedulerTest extends BaseIntegrationTest {
         verify(rabbitTemplate, atLeastOnce()).convertAndSend(
                 eq("veltro.subscription.exchange"),
                 eq("subscription.expiring"),
-                any()
+                (Object) any()
         );
     }
 }

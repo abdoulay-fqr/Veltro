@@ -84,7 +84,7 @@ class AlertSchedulerTest extends BaseIntegrationTest {
         verify(rabbitTemplate, never()).convertAndSend(
                 eq("veltro.activity.exchange"),
                 eq("activity.low-activity.alert"),
-                argThat(e -> e instanceof LowActivityAlertEvent &&
+                (Object) argThat(e -> e instanceof LowActivityAlertEvent &&
                         ((LowActivityAlertEvent) e).getMemberId().equals(8002L))
         );
     }

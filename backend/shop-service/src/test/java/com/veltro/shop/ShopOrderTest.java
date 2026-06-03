@@ -112,7 +112,7 @@ class ShopOrderTest extends BaseIntegrationTest {
         verify(rabbitTemplate).convertAndSend(
                 eq("veltro.shop.exchange"),
                 eq("order.placed"),
-                any()
+                (Object) any()
         );
     }
 

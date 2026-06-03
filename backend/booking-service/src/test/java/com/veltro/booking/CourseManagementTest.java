@@ -70,7 +70,7 @@ class CourseManagementTest extends BaseIntegrationTest {
         org.mockito.Mockito.verify(rabbitTemplate).convertAndSend(
                 org.mockito.ArgumentMatchers.eq("veltro.booking.exchange"),
                 org.mockito.ArgumentMatchers.eq("course.cancelled"),
-                org.mockito.ArgumentMatchers.any()
+                (Object) org.mockito.ArgumentMatchers.any()
         );
     }
 }

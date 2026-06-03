@@ -101,7 +101,7 @@ class AttendanceTest extends BaseIntegrationTest {
         verify(rabbitTemplate, times(3)).convertAndSend(
                 eq("veltro.booking.exchange"),
                 eq("member.warning"),
-                any()
+                (Object) any()
         );
     }
 

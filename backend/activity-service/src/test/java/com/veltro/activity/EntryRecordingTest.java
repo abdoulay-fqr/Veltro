@@ -72,7 +72,7 @@ class EntryRecordingTest extends BaseIntegrationTest {
         verify(rabbitTemplate).convertAndSend(
                 eq("veltro.activity.exchange"),
                 eq("activity.entry.recorded"),
-                any()
+                (Object) any()
         );
     }
 

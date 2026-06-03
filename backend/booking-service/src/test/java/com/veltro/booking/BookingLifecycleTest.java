@@ -139,7 +139,7 @@ class BookingLifecycleTest extends BaseIntegrationTest {
         verify(rabbitTemplate).convertAndSend(
                 eq("veltro.booking.exchange"),
                 eq("waitlist.promoted"),
-                any()
+                (Object) any()
         );
 
         // Verify waitlisted member is now BOOKED
