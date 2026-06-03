@@ -10,6 +10,10 @@ import '../features/subscription/presentation/subscription_screen.dart';
 import '../features/booking/presentation/courses_screen.dart';
 import '../features/booking/presentation/my_bookings_screen.dart';
 import '../features/activity/presentation/activity_screen.dart';
+import '../features/messaging/presentation/chats_screen.dart';
+import '../features/messaging/presentation/chat_screen.dart';
+import '../features/shop/presentation/shop_screen.dart';
+import '../features/shop/presentation/cart_screen.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/',
@@ -48,6 +52,16 @@ final appRouter = GoRouter(
         return ActivityScreen(memberProfileId: id);
       },
     ),
+    GoRoute(path: '/chats', builder: (_, __) => const ChatsScreen()),
+    GoRoute(
+      path: '/chat/:id',
+      builder: (context, state) {
+        final id = int.tryParse(state.pathParameters['id'] ?? '0') ?? 0;
+        return ChatScreen(conversationId: id);
+      },
+    ),
+    GoRoute(path: '/shop', builder: (_, __) => const ShopScreen()),
+    GoRoute(path: '/cart', builder: (_, __) => const CartScreen()),
     GoRoute(path: '/dashboard', builder: (_, __) => const _PlaceholderScreen(title: 'Dashboard')),
     GoRoute(path: '/coach', builder: (_, __) => const _PlaceholderScreen(title: 'Coach Portal')),
   ],

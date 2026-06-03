@@ -80,6 +80,20 @@ class HomeScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
             _QuickAction(
+              icon: Icons.chat_bubble_outline,
+              title: 'Messages',
+              subtitle: 'Chat with your coach',
+              onTap: () => context.push('/chats'),
+            ),
+            const SizedBox(height: 12),
+            _QuickAction(
+              icon: Icons.shopping_bag_outlined,
+              title: 'Shop',
+              subtitle: 'Supplements, clothing, equipment',
+              onTap: () => context.push('/shop'),
+            ),
+            const SizedBox(height: 12),
+            _QuickAction(
               icon: Icons.settings_outlined,
               title: 'Settings',
               subtitle: 'Notifications, password, account',

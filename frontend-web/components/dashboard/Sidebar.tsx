@@ -14,6 +14,9 @@ import {
   ClipboardCheck,
   TrendingUp,
   Activity,
+  MessageSquare,
+  ShoppingBag,
+  Package,
   LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -27,12 +30,16 @@ const adminNav = [
   { label: "Revenue Reports", href: "/dashboard/subscriptions/reports", icon: BarChart2 },
   { label: "Course Stats", href: "/dashboard/admin/courses", icon: TrendingUp },
   { label: "Activity", href: "/dashboard/activity", icon: Activity },
+  { label: "Messages", href: "/dashboard/messages", icon: MessageSquare },
+  { label: "Shop Products", href: "/dashboard/shop/products", icon: ShoppingBag },
+  { label: "Shop Orders", href: "/dashboard/shop/orders", icon: Package },
 ];
 
 const coachNav = [
   { label: "My Profile", href: "/dashboard/coach", icon: UserCheck },
   { label: "My Courses", href: "/dashboard/courses", icon: CalendarDays },
   { label: "Attendance", href: "/dashboard/attendance", icon: ClipboardCheck },
+  { label: "Messages", href: "/dashboard/messages", icon: MessageSquare },
 ];
 
 export default function Sidebar() {
@@ -48,7 +55,7 @@ export default function Sidebar() {
         <p className="text-xs text-zinc-500 mt-0.5 capitalize">{user?.role?.toLowerCase()} portal</p>
       </div>
 
-      <nav className="flex-1 px-3 py-4 space-y-0.5">
+      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
         {nav.map(({ label, href, icon: Icon }) => {
           const active = href === "/dashboard"
             ? pathname === href

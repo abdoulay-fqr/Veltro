@@ -95,4 +95,13 @@ public class PushNotificationService {
         sendPush(memberId, "Keep It Up! 💪",
                 "You've only had " + sessionCount + " session(s) this week. Head to the gym!");
     }
+
+    public void sendNewMessage(Long recipientId, String senderName, String contentPreview) {
+        sendPush(recipientId, "New message from " + senderName, contentPreview);
+    }
+
+    public void sendOrderPlaced(Long memberId, Long orderId) {
+        sendPush(memberId, "Order confirmed! 🛍️",
+                "Your order #" + orderId + " has been placed and is being processed.");
+    }
 }

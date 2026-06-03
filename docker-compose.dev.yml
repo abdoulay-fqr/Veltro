@@ -84,6 +84,19 @@ services:
     networks:
       - veltro-net
 
+  mysql-messaging:
+    image: mysql:8.0
+    container_name: veltro-mysql-messaging
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: veltro_messaging
+    ports:
+      - "3313:3306"
+    volumes:
+      - mysql-messaging-data:/var/lib/mysql
+    networks:
+      - veltro-net
+
   # ──────────────────────────────────────────
   # RabbitMQ
   # ──────────────────────────────────────────
@@ -109,6 +122,7 @@ volumes:
   mysql-booking-data:
   mysql-activity-data:
   mysql-shop-data:
+  mysql-messaging-data:
   rabbitmq-data:
 
 networks:
