@@ -11,7 +11,7 @@ import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-@SpringBootTest
+@SpringBootTest(classes = com.veltro.user.UserServiceApplication.class)
 @Testcontainers
 @ActiveProfiles("test")
 class UserServiceApplicationTests {
