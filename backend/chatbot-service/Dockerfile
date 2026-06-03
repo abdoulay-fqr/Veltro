@@ -6,7 +6,9 @@ RUN mvn -f common-lib/pom.xml install -DskipTests -q
 COPY chatbot-service/pom.xml chatbot-service/pom.xml
 RUN mvn -f chatbot-service/pom.xml dependency:go-offline -q
 COPY chatbot-service/src chatbot-service/src
-RUN mvn -f chatbot-service/pom.xml clean package -DskipTests -q
+RUN mvn -f chatbot-service/pom.xml clean package -DskipTests -q || \
+    (sleep 15 && mvn -f chatbot-service/pom.xml clean package -DskipTests -q) || \
+    (sleep 30 && mvn -f chatbot-service/pom.xml clean package -DskipTests -q)
 
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app

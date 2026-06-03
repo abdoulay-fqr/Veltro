@@ -6,7 +6,9 @@ RUN mvn -f common-lib/pom.xml install -DskipTests -q
 COPY messaging-service/pom.xml messaging-service/pom.xml
 RUN mvn -f messaging-service/pom.xml dependency:go-offline -q
 COPY messaging-service/src messaging-service/src
-RUN mvn -f messaging-service/pom.xml clean package -DskipTests -q
+RUN mvn -f messaging-service/pom.xml clean package -DskipTests -q || \
+    (sleep 15 && mvn -f messaging-service/pom.xml clean package -DskipTests -q) || \
+    (sleep 30 && mvn -f messaging-service/pom.xml clean package -DskipTests -q)
 
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app

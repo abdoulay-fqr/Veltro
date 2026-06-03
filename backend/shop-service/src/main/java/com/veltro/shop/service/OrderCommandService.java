@@ -13,6 +13,7 @@ import com.veltro.shop.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +32,7 @@ public class OrderCommandService {
     private final ProductRepository productRepo;
     private final RabbitTemplate rabbitTemplate;
 
+    @CacheEvict(value = "productById", allEntries = true)
     @Transactional
     public OrderResponse placeOrder(Long memberId, PlaceOrderRequest req) {
         List<OrderItem> items = new ArrayList<>();
@@ -86,6 +88,7 @@ public class OrderCommandService {
         return OrderResponse.from(order, items);
     }
 
+    @CacheEvict(value = "productById", allEntries = true)
     @Transactional
     public OrderResponse cancelOrder(Long orderId, Long memberId) {
         ShopOrder order = orderRepo.findById(orderId)

@@ -6,7 +6,9 @@ RUN mvn -f common-lib/pom.xml install -DskipTests -q
 COPY subscription-service/pom.xml subscription-service/pom.xml
 RUN mvn -f subscription-service/pom.xml dependency:go-offline -q
 COPY subscription-service/src subscription-service/src
-RUN mvn -f subscription-service/pom.xml clean package -DskipTests -q
+RUN mvn -f subscription-service/pom.xml clean package -DskipTests -q || \
+    (sleep 15 && mvn -f subscription-service/pom.xml clean package -DskipTests -q) || \
+    (sleep 30 && mvn -f subscription-service/pom.xml clean package -DskipTests -q)
 
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app

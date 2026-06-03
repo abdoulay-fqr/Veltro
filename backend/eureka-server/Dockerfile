@@ -3,7 +3,9 @@ WORKDIR /build
 COPY eureka-server/pom.xml pom.xml
 RUN mvn dependency:go-offline -q
 COPY eureka-server/src src
-RUN mvn clean package -DskipTests -q
+RUN mvn clean package -DskipTests -q || \
+    (sleep 15 && mvn clean package -DskipTests -q) || \
+    (sleep 30 && mvn clean package -DskipTests -q)
 
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app

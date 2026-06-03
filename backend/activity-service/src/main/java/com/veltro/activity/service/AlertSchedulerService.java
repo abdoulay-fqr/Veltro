@@ -31,7 +31,7 @@ public class AlertSchedulerService {
     @Scheduled(cron = "0 0 8 * * MON")
     public void checkLowActivity() {
         LocalDate today = LocalDate.now(clock);
-        LocalDate weekStart = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        LocalDate weekStart = today.with(TemporalAdjusters.previous(DayOfWeek.MONDAY));
         LocalDateTime since = weekStart.atStartOfDay();
 
         log.info("LowActivityAlert scheduler running for week starting {}", weekStart);

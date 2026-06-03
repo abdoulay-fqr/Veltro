@@ -5,19 +5,22 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.MySQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
-@Testcontainers
 @ActiveProfiles("test")
 public abstract class BaseIntegrationTest {
 
-    @Container
+    // Singleton container: started once for the JVM lifetime, never restarted between
+    // test classes. This avoids the Testcontainers/@Container lifecycle stopping the
+    // container after each class and invalidating the cached Spring ApplicationContext.
     static final MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0")
             .withDatabaseName("veltro_subscription_test")
             .withUsername("test")
             .withPassword("test");
+
+    static {
+        mysql.start();
+    }
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {

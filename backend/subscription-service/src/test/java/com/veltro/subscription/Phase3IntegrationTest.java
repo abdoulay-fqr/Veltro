@@ -87,8 +87,8 @@ class Phase3IntegrationTest extends BaseIntegrationTest {
         subscriptionService.resume(monthly.getId());
         var resumed = subscriptionRepo.findById(monthly.getId()).orElseThrow();
         assertThat(resumed.getStatus()).isEqualTo(SubscriptionStatus.ACTIVE);
-        // End date extended by 5 days: Aug 01 + 5 = Aug 06
-        assertThat(resumed.getEndDate()).isEqualTo(java.time.LocalDate.of(2026, 8, 6));
+        // End date extended by 5 days: Jul 31 + 5 = Aug 05 (MONTHLY = 30 days; Jul 01 + 30 = Jul 31)
+        assertThat(resumed.getEndDate()).isEqualTo(java.time.LocalDate.of(2026, 8, 5));
 
         // ── Step 5: Scheduler runs — subscription in 7-day window → event published
         fixClock("2026-07-31"); // 6 days before Aug 06

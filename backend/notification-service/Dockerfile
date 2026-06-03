@@ -6,7 +6,9 @@ RUN mvn -f common-lib/pom.xml install -DskipTests -q
 COPY notification-service/pom.xml notification-service/pom.xml
 RUN mvn -f notification-service/pom.xml dependency:go-offline -q
 COPY notification-service/src notification-service/src
-RUN mvn -f notification-service/pom.xml clean package -DskipTests -q
+RUN mvn -f notification-service/pom.xml clean package -DskipTests -q || \
+    (sleep 15 && mvn -f notification-service/pom.xml clean package -DskipTests -q) || \
+    (sleep 30 && mvn -f notification-service/pom.xml clean package -DskipTests -q)
 
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
