@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { toast } from "sonner";
 import { messagingApi, ConversationResponse, MessageResponse } from "@/lib/api/messaging";
 import { useAuth } from "@/lib/auth/useAuth";
+import { apiError } from "@/lib/utils/api-error";
 import { Send } from "lucide-react";
 
 export default function MessagesPage() {
@@ -20,7 +21,11 @@ export default function MessagesPage() {
     try {
       const res = await messagingApi.listConversations();
       setConversations((res.data as unknown as { data: ConversationResponse[] }).data ?? []);
-    } catch {}
+    } catch (err) {
+      // Silent fail during polling — only show error on first load
+      if (conversations.length === 0) apiError(err, "Failed to load conversations");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadMessages = useCallback(async (convId: number) => {
@@ -30,7 +35,9 @@ export default function MessagesPage() {
       setMessages(data?.content ?? []);
       bottomRef.current?.scrollIntoView({ behavior: "smooth" });
       await messagingApi.markRead(convId);
-    } catch {}
+    } catch {
+      // Silent fail during 3s polling — avoids toast spam
+    }
   }, []);
 
   useEffect(() => { loadConversations(); }, [loadConversations]);
@@ -55,7 +62,7 @@ export default function MessagesPage() {
       setInput("");
       await loadMessages(selected.id);
       loadConversations();
-    } catch { toast.error("Failed to send message"); }
+    } catch (err) { apiError(err, "Failed to send message"); }
     finally { setSending(false); }
   };
 

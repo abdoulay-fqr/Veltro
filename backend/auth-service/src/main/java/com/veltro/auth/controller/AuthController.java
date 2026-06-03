@@ -5,7 +5,9 @@ import com.veltro.auth.dto.LoginRequest;
 import com.veltro.auth.dto.RefreshRequest;
 import com.veltro.auth.dto.RegisterRequest;
 import com.veltro.auth.service.AuthService;
+import com.veltro.auth.service.LoginRateLimiterService;
 import com.veltro.common.dto.ApiResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,14 +18,20 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+    private final LoginRateLimiterService rateLimiter;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, LoginRateLimiterService rateLimiter) {
         this.authService = authService;
+        this.rateLimiter = rateLimiter;
     }
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<AuthResponse>> register(
-            @Valid @RequestBody RegisterRequest request) {
+            @Valid @RequestBody RegisterRequest request,
+            HttpServletRequest httpRequest) {
+
+        rateLimiter.checkAndRecord(resolveClientIp(httpRequest));
+
         AuthResponse response = authService.register(request);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -32,7 +40,12 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<AuthResponse>> login(
-            @Valid @RequestBody LoginRequest request) {
+            @Valid @RequestBody LoginRequest request,
+            HttpServletRequest httpRequest) {
+
+        // Rate-limit before credential check to prevent enumeration attacks
+        rateLimiter.checkAndRecord(resolveClientIp(httpRequest));
+
         AuthResponse response = authService.login(request);
         return ResponseEntity.ok(ApiResponse.success("Login successful", response));
     }
@@ -48,9 +61,21 @@ public class AuthController {
     public ResponseEntity<ApiResponse<Void>> logout(
             @RequestHeader("Authorization") String authHeader) {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
-            authService.logout(token);
+            authService.logout(authHeader.substring(7));
         }
         return ResponseEntity.ok(ApiResponse.success("Logged out successfully"));
+    }
+
+    /**
+     * Resolves the real client IP, respecting X-Forwarded-For from the API Gateway.
+     * Falls back to RemoteAddr when the header is absent (direct calls / testing).
+     */
+    private String resolveClientIp(HttpServletRequest request) {
+        String xff = request.getHeader("X-Forwarded-For");
+        if (xff != null && !xff.isBlank()) {
+            // X-Forwarded-For may be a comma-separated chain; take the first (originating IP)
+            return xff.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
     }
 }

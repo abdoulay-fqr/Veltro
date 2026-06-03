@@ -35,7 +35,10 @@ export default function ActivityPage() {
     try {
       const [statsRes] = await Promise.all([activityApi.getAdminStats()]);
       setAdminStats((statsRes.data as unknown as { data: AdminStatsResponse }).data);
-    } catch { toast.error("Failed to load activity stats"); }
+    } catch (err) {
+      const { apiError } = await import("@/lib/utils/api-error");
+      apiError(err, "Failed to load activity stats");
+    }
     finally { setLoading(false); }
   }, []);
 
@@ -45,7 +48,9 @@ export default function ActivityPage() {
       const entries = (res.data as unknown as { data: EntryResponse[] }).data ?? [];
       setLiveEntries(entries);
       if (entries.length > 0) setLastEntry(entries[0]);
-    } catch {}
+    } catch {
+      // Silent during 5s polling — avoids toast spam while polling
+    }
   }, []);
 
   useEffect(() => { loadStats(); loadLive(); }, [loadStats, loadLive]);

@@ -1,0 +1,73 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Veltro User Service API",
+    "version": "1.0.0",
+    "description": "Member, Coach, Admin profile management. NFC card assignment and scanning. Health profile CRUD."
+  },
+  "servers": [{ "url": "http://localhost:8082", "description": "Local development" }],
+  "tags": [
+    { "name": "Members" },
+    { "name": "Coaches" },
+    { "name": "HealthProfile" },
+    { "name": "NFC" }
+  ],
+  "paths": {
+    "/api/v1/users/members": {
+      "post": {
+        "tags": ["Members"], "summary": "Create member profile",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateMemberRequest" } } } },
+        "responses": { "201": { "description": "Member created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemberApiResponse" } } } } }
+      },
+      "get": {
+        "tags": ["Members"], "summary": "List all members (ADMIN only)",
+        "parameters": [
+          { "in": "query", "name": "status", "schema": { "type": "string", "enum": ["ACTIVE","SUSPENDED"] } },
+          { "in": "header", "name": "X-User-Role", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Paginated member list" } }
+      }
+    },
+    "/api/v1/users/members/{id}": {
+      "get": { "tags": ["Members"], "summary": "Get member by ID", "parameters": [{ "in": "path", "name": "id", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Member profile" } } },
+      "put": { "tags": ["Members"], "summary": "Update member profile", "parameters": [{ "in": "path", "name": "id", "required": true, "schema": { "type": "integer" } }], "requestBody": { "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UpdateMemberRequest" } } } }, "responses": { "200": { "description": "Updated member" } } }
+    },
+    "/api/v1/users/members/{id}/avatar": {
+      "post": { "tags": ["Members"], "summary": "Upload avatar (multipart)", "parameters": [{ "in": "path", "name": "id", "required": true, "schema": { "type": "integer" } }], "requestBody": { "content": { "multipart/form-data": { "schema": { "properties": { "file": { "type": "string", "format": "binary" } } } } } }, "responses": { "200": { "description": "Avatar uploaded" } } }
+    },
+    "/api/v1/users/members/{id}/suspend": {
+      "put": { "tags": ["Members"], "summary": "Suspend member (ADMIN only)", "parameters": [{ "in": "path", "name": "id", "required": true, "schema": { "type": "integer" } }, { "in": "header", "name": "X-User-Role", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "Member suspended" } } }
+    },
+    "/api/v1/users/members/{id}/activate": {
+      "put": { "tags": ["Members"], "summary": "Activate member (ADMIN only)", "parameters": [{ "in": "path", "name": "id", "required": true, "schema": { "type": "integer" } }, { "in": "header", "name": "X-User-Role", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "Member activated" } } }
+    },
+    "/api/v1/users/members/{memberProfileId}/health": {
+      "get": { "tags": ["HealthProfile"], "summary": "Get health profile", "parameters": [{ "in": "path", "name": "memberProfileId", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Health profile" } } },
+      "put": { "tags": ["HealthProfile"], "summary": "Upsert health profile", "parameters": [{ "in": "path", "name": "memberProfileId", "required": true, "schema": { "type": "integer" } }], "requestBody": { "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HealthProfileRequest" } } } }, "responses": { "200": { "description": "Health profile updated" } } }
+    },
+    "/api/v1/users/coaches": {
+      "post": { "tags": ["Coaches"], "summary": "Create coach profile", "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateCoachRequest" } } } }, "responses": { "201": { "description": "Coach created" } } },
+      "get": { "tags": ["Coaches"], "summary": "List all coaches (ADMIN only)", "responses": { "200": { "description": "Paginated coach list" } } }
+    },
+    "/api/v1/nfc/activate": {
+      "post": { "tags": ["NFC"], "summary": "Activate NFC card and assign to member", "requestBody": { "content": { "application/json": { "schema": { "properties": { "memberProfileId": { "type": "integer" }, "cardUid": { "type": "string", "example": "card001" } } } } } }, "responses": { "201": { "description": "Card activated" } } }
+    },
+    "/api/v1/nfc/deactivate": {
+      "post": { "tags": ["NFC"], "summary": "Deactivate NFC card", "requestBody": { "content": { "application/json": { "schema": { "properties": { "memberProfileId": { "type": "integer" }, "cardUid": { "type": "string" } } } } } }, "responses": { "200": { "description": "Card deactivated" } } }
+    },
+    "/api/v1/nfc/simulate-scan": {
+      "post": { "tags": ["NFC"], "summary": "Simulate card scan — returns member info", "requestBody": { "content": { "application/json": { "schema": { "properties": { "cardUid": { "type": "string", "example": "card001" } } } } } }, "responses": { "200": { "description": "Member info for scanned card", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SimulateScanResponse" } } } } } }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CreateMemberRequest": { "type": "object", "required": ["userId","identifier","firstname","lastname"], "properties": { "userId": { "type": "integer" }, "identifier": { "type": "string", "format": "email" }, "firstname": { "type": "string" }, "lastname": { "type": "string" }, "phone": { "type": "string" }, "dateOfBirth": { "type": "string", "format": "date" } } },
+      "UpdateMemberRequest": { "type": "object", "properties": { "firstname": { "type": "string" }, "lastname": { "type": "string" }, "phone": { "type": "string" }, "dateOfBirth": { "type": "string", "format": "date" } } },
+      "MemberResponse": { "type": "object", "properties": { "id": { "type": "integer" }, "userId": { "type": "integer" }, "firstname": { "type": "string" }, "lastname": { "type": "string" }, "phone": { "type": "string" }, "dateOfBirth": { "type": "string" }, "avatarUrl": { "type": "string" }, "status": { "type": "string", "enum": ["ACTIVE","SUSPENDED"] }, "createdAt": { "type": "string" }, "updatedAt": { "type": "string" } } },
+      "MemberApiResponse": { "type": "object", "properties": { "success": { "type": "boolean" }, "message": { "type": "string" }, "data": { "$ref": "#/components/schemas/MemberResponse" } } },
+      "CreateCoachRequest": { "type": "object", "required": ["userId","identifier","firstname","lastname"], "properties": { "userId": { "type": "integer" }, "identifier": { "type": "string" }, "firstname": { "type": "string" }, "lastname": { "type": "string" }, "phone": { "type": "string" }, "bio": { "type": "string" }, "specialization": { "type": "string" }, "certifications": { "type": "string" } } },
+      "HealthProfileRequest": { "type": "object", "properties": { "fitnessObjective": { "type": "string", "example": "WEIGHT_LOSS" }, "medicalRestrictions": { "type": "string" }, "weightKg": { "type": "number" }, "heightCm": { "type": "number" } } },
+      "SimulateScanResponse": { "type": "object", "properties": { "cardUid": { "type": "string" }, "cardStatus": { "type": "string", "enum": ["ACTIVE","INACTIVE"] }, "memberId": { "type": "integer" }, "userId": { "type": "integer" }, "firstname": { "type": "string" }, "lastname": { "type": "string" }, "phone": { "type": "string" }, "avatarUrl": { "type": "string" }, "accountStatus": { "type": "string" } } }
+    }
+  }
+}

@@ -14,6 +14,7 @@ import {
   SubscriptionResponse,
   PaymentRecordResponse,
 } from "@/lib/api/subscriptions";
+import { apiError } from "@/lib/utils/api-error";
 import { Search, X } from "lucide-react";
 
 const PLAN_COLORS: Record<string, string> = {
@@ -49,8 +50,8 @@ export default function SubscriptionsPage() {
       ]);
       setSubs(sumRes.data.data ? subsRes.data.data?.content ?? [] : subsRes.data.data?.content ?? []);
       setSummary((sumRes.data as unknown as { data: Record<string, number> }).data ?? {});
-    } catch {
-      toast.error("Failed to load subscriptions");
+    } catch (err) {
+      apiError(err, "Failed to load subscriptions");
     } finally {
       setLoading(false);
     }
@@ -60,14 +61,14 @@ export default function SubscriptionsPage() {
 
   const handleCancel = async (id: number) => {
     try { await subscriptionsApi.cancel(id); toast.success("Subscription cancelled"); loadData(); }
-    catch { toast.error("Failed to cancel subscription"); }
+    catch (err) { apiError(err, "Failed to cancel subscription"); }
   };
 
   const loadInvoices = async (sub: SubscriptionResponse) => {
     try {
       const res = await subscriptionsApi.getInvoices(sub.memberId);
       setInvoiceModal({ sub, invoices: res.data.data ?? [] });
-    } catch { toast.error("Failed to load invoices"); }
+    } catch (err) { apiError(err, "Failed to load invoices"); }
   };
 
   const columns: ColumnDef<SubscriptionResponse>[] = [

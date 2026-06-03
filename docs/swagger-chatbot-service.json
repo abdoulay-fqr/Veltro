@@ -1,0 +1,91 @@
+{
+  "openapi": "3.0.3",
+  "info": { "title": "Veltro Chatbot Service API", "version": "1.0.0", "description": "AI assistant powered by Google Gemini 1.5 Flash. Stateless — conversation history is managed by the client and sent with each request. Context is enriched with live member data from subscription, booking, and activity services (cached 5 minutes)." },
+  "servers": [{ "url": "http://localhost:8089", "description": "Local development" }],
+  "tags": [{ "name": "Chatbot" }],
+  "paths": {
+    "/api/v1/chat/message": {
+      "post": {
+        "tags": ["Chatbot"],
+        "summary": "Send a message to Veltro AI Assistant",
+        "description": "**System prompt injected automatically:**\n> \"You are Veltro Assistant, the AI helper for Veltro gym management platform. You help members with questions about their subscription, bookings, activity, and gym services. Be concise, friendly, and helpful. Always respond in the same language the user writes in.\"\n\n**Context enrichment** (Caffeine-cached 5 min, graceful skip if services down):\n- Subscription: plan, status, daysRemaining\n- Upcoming bookings: next 3 BOOKED courses\n- Today's gym entry: entered today? yes/no + time\n\n**Rate limiting:** 20 requests/hour per userId (HTTP 429 on exceed).\n\n**Security:** Gemini API key is NEVER exposed to clients — all Gemini calls happen server-side.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ChatRequest" },
+              "example": {
+                "userId": 1,
+                "message": "What is my next class?",
+                "history": [
+                  { "role": "user", "content": "Hello!" },
+                  { "role": "model", "content": "Hi! I'm Veltro Assistant. How can I help you today?" }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "AI reply with updated conversation history",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ChatApiResponse" },
+                "example": {
+                  "success": true,
+                  "data": {
+                    "reply": "Your next class is Morning Strength on 2026-06-10 at 09:00 in the Weights Room.",
+                    "updatedHistory": [
+                      { "role": "user", "content": "Hello!" },
+                      { "role": "model", "content": "Hi! I'm Veltro Assistant. How can I help you today?" },
+                      { "role": "user", "content": "What is my next class?" },
+                      { "role": "model", "content": "Your next class is Morning Strength on 2026-06-10 at 09:00 in the Weights Room." }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Validation error (missing userId or message)" },
+          "429": { "description": "Rate limit exceeded — 20 requests/hour per userId" }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HistoryMessage": {
+        "type": "object",
+        "required": ["role", "content"],
+        "properties": {
+          "role": { "type": "string", "enum": ["user", "model"], "description": "Gemini uses 'user' and 'model' (not 'assistant')" },
+          "content": { "type": "string" }
+        }
+      },
+      "ChatRequest": {
+        "type": "object",
+        "required": ["userId", "message"],
+        "properties": {
+          "userId": { "type": "integer", "description": "auth.app_user.id — used for context enrichment and rate limiting" },
+          "message": { "type": "string", "maxLength": 2000 },
+          "history": { "type": "array", "items": { "$ref": "#/components/schemas/HistoryMessage" }, "description": "Full conversation history for multi-turn context. Empty array for first message." }
+        }
+      },
+      "ChatResponse": {
+        "type": "object",
+        "properties": {
+          "reply": { "type": "string", "description": "AI-generated reply" },
+          "updatedHistory": { "type": "array", "items": { "$ref": "#/components/schemas/HistoryMessage" }, "description": "Updated history including the new user message and AI reply. Store client-side for next request." }
+        }
+      },
+      "ChatApiResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "message": { "type": "string", "nullable": true },
+          "data": { "$ref": "#/components/schemas/ChatResponse" }
+        }
+      }
+    }
+  }
+}

@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { coachesApi, CoachResponse } from "@/lib/api/coaches";
 import api from "@/lib/api";
 import { useAuth } from "@/lib/auth/useAuth";
+import { apiError } from "@/lib/utils/api-error";
 import { Camera, Save } from "lucide-react";
 
 const profileSchema = z.object({
@@ -69,8 +70,8 @@ export default function CoachProfilePage() {
       const updated = await coachesApi.update(coach.id, values);
       setCoach(updated.data.data);
       toast.success("Profile updated");
-    } catch {
-      toast.error("Failed to update profile");
+    } catch (err) {
+      apiError(err, "Failed to update profile");
     }
   };
 
@@ -82,8 +83,8 @@ export default function CoachProfilePage() {
       });
       toast.success("Password changed");
       passwordForm.reset();
-    } catch {
-      toast.error("Failed to change password");
+    } catch (err) {
+      apiError(err, "Failed to change password");
     }
   };
 
@@ -95,8 +96,8 @@ export default function CoachProfilePage() {
       const res = await coachesApi.uploadAvatar(coach.id, file);
       setCoach(res.data.data);
       toast.success("Avatar updated");
-    } catch {
-      toast.error("Failed to upload avatar");
+    } catch (err) {
+      apiError(err, "Failed to upload avatar");
       setAvatarPreview(null);
     }
   };

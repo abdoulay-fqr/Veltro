@@ -1,0 +1,47 @@
+{
+  "openapi": "3.0.3",
+  "info": { "title": "Veltro Shop Service API", "version": "1.0.0", "description": "Product catalog management, order placement with optimistic stock locking, and admin revenue reporting." },
+  "servers": [{ "url": "http://localhost:8088", "description": "Local development" }],
+  "tags": [{ "name": "Products" }, { "name": "Orders" }, { "name": "Admin Shop" }],
+  "paths": {
+    "/api/v1/shop/products": {
+      "get": { "tags": ["Products"], "summary": "List active products (optional category filter)", "parameters": [{ "in": "query", "name": "category", "schema": { "type": "string", "enum": ["SUPPLEMENT","CLOTHING","EQUIPMENT"] } }, { "in": "query", "name": "page", "schema": { "type": "integer", "default": 0 } }, { "in": "query", "name": "size", "schema": { "type": "integer", "default": 20 } }], "responses": { "200": { "description": "Paginated active product list" } } },
+      "post": { "tags": ["Products"], "summary": "Create product (ADMIN only)", "parameters": [{ "in": "header", "name": "X-User-Role", "required": true, "schema": { "type": "string" } }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateProductRequest" } } } }, "responses": { "201": { "description": "Product created" } } }
+    },
+    "/api/v1/shop/products/{id}": {
+      "get": { "tags": ["Products"], "summary": "Product detail", "parameters": [{ "in": "path", "name": "id", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Product" } } },
+      "put": { "tags": ["Products"], "summary": "Update product (ADMIN only)", "parameters": [{ "in": "path", "name": "id", "required": true, "schema": { "type": "integer" } }, { "in": "header", "name": "X-User-Role", "required": true, "schema": { "type": "string" } }], "requestBody": { "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateProductRequest" } } } }, "responses": { "200": { "description": "Product updated" } } },
+      "delete": { "tags": ["Products"], "summary": "Soft delete — sets active=false (ADMIN only)", "parameters": [{ "in": "path", "name": "id", "required": true, "schema": { "type": "integer" } }, { "in": "header", "name": "X-User-Role", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "Product deactivated" } } }
+    },
+    "/api/v1/shop/orders": {
+      "post": { "tags": ["Orders"], "summary": "Place an order (validate + decrement stock atomically)", "description": "Uses @Version optimistic locking. Returns 409 if concurrent order depletes stock. Publishes OrderPlacedEvent.", "parameters": [{ "in": "header", "name": "X-User-Id", "required": true, "schema": { "type": "integer" } }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PlaceOrderRequest" } } } }, "responses": { "201": { "description": "Order placed", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OrderResponse" } } } }, "409": { "description": "Insufficient stock (concurrent order depleted it)" } } },
+      "get": { "tags": ["Orders"], "summary": "Current member's order history", "parameters": [{ "in": "header", "name": "X-User-Id", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Paginated order list" } } }
+    },
+    "/api/v1/shop/orders/{id}": {
+      "get": { "tags": ["Orders"], "summary": "Order detail with itemized list", "parameters": [{ "in": "path", "name": "id", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Order detail" } } }
+    },
+    "/api/v1/shop/orders/{id}/cancel": {
+      "put": { "tags": ["Orders"], "summary": "Cancel PENDING order (restores stock)", "parameters": [{ "in": "path", "name": "id", "required": true, "schema": { "type": "integer" } }, { "in": "header", "name": "X-User-Id", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Order cancelled; stock restored" }, "422": { "description": "Order not PENDING" } } }
+    },
+    "/api/v1/shop/admin/orders": {
+      "get": { "tags": ["Admin Shop"], "summary": "All orders with optional status filter (ADMIN only)", "parameters": [{ "in": "query", "name": "status", "schema": { "type": "string", "enum": ["PENDING","CONFIRMED","SHIPPED","DELIVERED","CANCELLED"] } }, { "in": "header", "name": "X-User-Role", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "Paginated order list" } } }
+    },
+    "/api/v1/shop/admin/orders/{id}/confirm": {
+      "put": { "tags": ["Admin Shop"], "summary": "Confirm order PENDING → CONFIRMED (ADMIN only)", "parameters": [{ "in": "path", "name": "id", "required": true, "schema": { "type": "integer" } }, { "in": "header", "name": "X-User-Role", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "Order confirmed" } } }
+    },
+    "/api/v1/shop/admin/orders/{id}/ship": {
+      "put": { "tags": ["Admin Shop"], "summary": "Ship order CONFIRMED → SHIPPED (ADMIN only)", "parameters": [{ "in": "path", "name": "id", "required": true, "schema": { "type": "integer" } }, { "in": "header", "name": "X-User-Role", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "Order shipped" } } }
+    },
+    "/api/v1/shop/admin/revenue": {
+      "get": { "tags": ["Admin Shop"], "summary": "Total shop revenue (CONFIRMED + SHIPPED + DELIVERED)", "parameters": [{ "in": "header", "name": "X-User-Role", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "Revenue total", "content": { "application/json": { "schema": { "properties": { "data": { "properties": { "totalRevenue": { "type": "number" } } } } } } } } }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CreateProductRequest": { "type": "object", "required": ["name","category","price"], "properties": { "name": { "type": "string" }, "description": { "type": "string" }, "category": { "type": "string", "enum": ["SUPPLEMENT","CLOTHING","EQUIPMENT"] }, "price": { "type": "number", "minimum": 0.01 }, "stockQuantity": { "type": "integer", "minimum": 0 }, "imageUrl": { "type": "string" } } },
+      "ProductResponse": { "type": "object", "properties": { "id": { "type": "integer" }, "name": { "type": "string" }, "description": { "type": "string" }, "category": { "type": "string" }, "price": { "type": "number" }, "stockQuantity": { "type": "integer" }, "imageUrl": { "type": "string", "nullable": true }, "active": { "type": "boolean" } } },
+      "PlaceOrderRequest": { "type": "object", "required": ["items","shippingAddress"], "properties": { "items": { "type": "array", "minItems": 1, "items": { "properties": { "productId": { "type": "integer" }, "quantity": { "type": "integer", "minimum": 1 } }, "required": ["productId","quantity"] } }, "shippingAddress": { "type": "string" } } },
+      "OrderResponse": { "type": "object", "properties": { "id": { "type": "integer" }, "memberId": { "type": "integer" }, "status": { "type": "string", "enum": ["PENDING","CONFIRMED","SHIPPED","DELIVERED","CANCELLED"] }, "totalAmount": { "type": "number" }, "shippingAddress": { "type": "string" }, "items": { "type": "array", "items": { "properties": { "id": { "type": "integer" }, "productId": { "type": "integer" }, "productName": { "type": "string", "description": "Snapshot at time of order" }, "quantity": { "type": "integer" }, "unitPrice": { "type": "number", "description": "Snapshot at time of order" }, "lineTotal": { "type": "number" } } } }, "createdAt": { "type": "string" } } }
+    }
+  }
+}

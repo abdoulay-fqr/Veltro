@@ -1,0 +1,38 @@
+{
+  "openapi": "3.0.3",
+  "info": { "title": "Veltro Activity Service API", "version": "1.0.0", "description": "Gym entry/exit tracking via NFC (immutable append-only log), machine session recording, and member performance analytics." },
+  "servers": [{ "url": "http://localhost:8085", "description": "Local development" }],
+  "tags": [{ "name": "Activity" }],
+  "paths": {
+    "/api/v1/activity/entry": {
+      "post": { "tags": ["Activity"], "summary": "Record gym entry or exit via NFC card scan", "description": "Validates the card with user-service (circuit breaker). Links IN/OUT pairs via sessionId UUID. Publishes GymEntryRecordedEvent.", "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EntryRequest" } } } }, "responses": { "201": { "description": "Entry recorded", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EntryResponse" } } } }, "422": { "description": "Card inactive or member suspended" }, "503": { "description": "User-service unavailable (circuit breaker open)" } } }
+    },
+    "/api/v1/activity/session": {
+      "post": { "tags": ["Activity"], "summary": "Record a machine workout session", "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SessionRequest" } } } }, "responses": { "201": { "description": "Session recorded" } } }
+    },
+    "/api/v1/activity/entries/{memberId}": {
+      "get": { "tags": ["Activity"], "summary": "Paginated entry history for a member", "parameters": [{ "in": "path", "name": "memberId", "required": true, "schema": { "type": "integer" } }, { "in": "query", "name": "from", "schema": { "type": "string", "format": "date-time" } }, { "in": "query", "name": "to", "schema": { "type": "string", "format": "date-time" } }, { "in": "query", "name": "page", "schema": { "type": "integer", "default": 0 } }, { "in": "query", "name": "size", "schema": { "type": "integer", "default": 20 } }], "responses": { "200": { "description": "Paginated entry list" } } }
+    },
+    "/api/v1/activity/entries/live": {
+      "get": { "tags": ["Activity"], "summary": "Last 20 entries across all members (ADMIN only)", "parameters": [{ "in": "header", "name": "X-User-Role", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "Last 20 entries", "content": { "application/json": { "schema": { "properties": { "data": { "type": "array", "items": { "$ref": "#/components/schemas/EntryResponse" } } } } } } } } }
+    },
+    "/api/v1/activity/sessions/{memberId}": {
+      "get": { "tags": ["Activity"], "summary": "Paginated machine session history for a member", "parameters": [{ "in": "path", "name": "memberId", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Paginated session list" } } }
+    },
+    "/api/v1/activity/stats/{memberId}": {
+      "get": { "tags": ["Activity"], "summary": "Member performance stats", "description": "Returns weeklyCalories, totalSessions, avgHeartRate (last 30 sessions), currentStreak (consecutive active days), and personal records.", "parameters": [{ "in": "path", "name": "memberId", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Member stats", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemberStatsResponse" } } } } } }
+    },
+    "/api/v1/activity/stats/admin": {
+      "get": { "tags": ["Activity"], "summary": "Admin occupancy stats: heatmap, peak hour, today/weekly entries", "parameters": [{ "in": "header", "name": "X-User-Role", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "Admin stats", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AdminStatsResponse" } } } } } }
+    }
+  },
+  "components": {
+    "schemas": {
+      "EntryRequest": { "type": "object", "required": ["cardUid","direction"], "properties": { "cardUid": { "type": "string", "example": "card001" }, "direction": { "type": "string", "enum": ["IN","OUT"] } } },
+      "EntryResponse": { "type": "object", "properties": { "id": { "type": "integer" }, "memberId": { "type": "integer" }, "memberName": { "type": "string" }, "cardUid": { "type": "string" }, "direction": { "type": "string", "enum": ["IN","OUT"] }, "timestamp": { "type": "string", "format": "date-time" }, "sessionId": { "type": "string", "description": "UUID linking IN and OUT entries as a pair" } } },
+      "SessionRequest": { "type": "object", "required": ["memberId","machineType","durationMinutes"], "properties": { "memberId": { "type": "integer" }, "memberEmail": { "type": "string" }, "machineType": { "type": "string", "enum": ["TREADMILL","BIKE","ROWING","WEIGHTS","OTHER"] }, "durationMinutes": { "type": "integer" }, "caloriesBurned": { "type": "integer" }, "distanceKm": { "type": "number" }, "avgHeartRate": { "type": "integer" } } },
+      "MemberStatsResponse": { "type": "object", "properties": { "memberId": { "type": "integer" }, "weeklyCalories": { "type": "integer" }, "totalSessions": { "type": "integer" }, "avgHeartRate": { "type": "number", "nullable": true }, "currentStreak": { "type": "integer" }, "maxCaloriesInSession": { "type": "integer" }, "maxDistanceKm": { "type": "number" }, "maxDurationMinutes": { "type": "integer" } } },
+      "AdminStatsResponse": { "type": "object", "properties": { "entriesByHour": { "type": "object", "description": "Map of hour (0-23) to entry count", "example": { "9": 15, "10": 23, "17": 31 } }, "peakHour": { "type": "integer" }, "todayEntries": { "type": "integer" }, "weeklyEntries": { "type": "integer" }, "currentOccupancy": { "type": "integer", "description": "Members currently inside (IN without matching OUT)" } } }
+    }
+  }
+}

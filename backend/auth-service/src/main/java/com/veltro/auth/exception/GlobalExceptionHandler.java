@@ -1,5 +1,6 @@
 package com.veltro.auth.exception;
 
+import com.veltro.auth.service.LoginRateLimiterService;
 import com.veltro.common.dto.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,14 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(LoginRateLimiterService.TooManyAttemptsException.class)
+    public ResponseEntity<ApiResponse<Void>> handleRateLimit(
+            LoginRateLimiterService.TooManyAttemptsException ex) {
+        return ResponseEntity
+                .status(HttpStatus.TOO_MANY_REQUESTS)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiResponse<Void>> handleRuntimeException(RuntimeException ex) {

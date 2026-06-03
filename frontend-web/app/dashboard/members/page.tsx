@@ -5,21 +5,31 @@ import {
   useReactTable,
   getCoreRowModel,
   getFilteredRowModel,
+  getPaginationRowModel,
   flexRender,
   ColumnDef,
+  PaginationState,
 } from "@tanstack/react-table";
 import { toast } from "sonner";
 import { membersApi, MemberResponse } from "@/lib/api/members";
 import { useAuth } from "@/lib/auth/useAuth";
 import MemberModal from "@/components/dashboard/MemberModal";
 import CreateMemberForm from "@/components/dashboard/CreateMemberForm";
-import { UserPlus, Search } from "lucide-react";
+import { UserPlus, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { apiError } from "@/lib/utils/api-error";
+
+const PAGE_SIZE = 20;
 
 export default function MembersPage() {
   const { user } = useAuth();
   const [members, setMembers] = useState<MemberResponse[]>([]);
   const [globalFilter, setGlobalFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<"" | "ACTIVE" | "SUSPENDED">("");
+  // Fix: track pagination state explicitly so we can reset it on filter change
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: PAGE_SIZE,
+  });
   const [selected, setSelected] = useState<MemberResponse | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -27,10 +37,10 @@ export default function MembersPage() {
   const loadMembers = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await membersApi.list({ status: statusFilter || undefined, size: 100 });
+      const res = await membersApi.list({ status: statusFilter || undefined, size: 200 });
       setMembers(res.data.data?.content ?? []);
-    } catch {
-      toast.error("Failed to load members");
+    } catch (err) {
+      apiError(err, "Failed to load members");
     } finally {
       setLoading(false);
     }
@@ -38,13 +48,18 @@ export default function MembersPage() {
 
   useEffect(() => { loadMembers(); }, [loadMembers]);
 
+  // Fix: reset to page 0 whenever any filter changes
+  useEffect(() => {
+    setPagination((p) => ({ ...p, pageIndex: 0 }));
+  }, [globalFilter, statusFilter]);
+
   const handleSuspend = async (id: number) => {
     try {
       await membersApi.suspend(id);
       toast.success("Member suspended");
       loadMembers();
-    } catch {
-      toast.error("Failed to suspend member");
+    } catch (err) {
+      apiError(err, "Failed to suspend member");
     }
   };
 
@@ -53,8 +68,8 @@ export default function MembersPage() {
       await membersApi.activate(id);
       toast.success("Member activated");
       loadMembers();
-    } catch {
-      toast.error("Failed to activate member");
+    } catch (err) {
+      apiError(err, "Failed to activate member");
     }
   };
 
@@ -78,11 +93,9 @@ export default function MembersPage() {
       cell: (info) => {
         const v = info.getValue() as string;
         return (
-          <span
-            className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-              v === "ACTIVE" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-            }`}
-          >
+          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+            v === "ACTIVE" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+          }`}>
             {v}
           </span>
         );
@@ -103,17 +116,11 @@ export default function MembersPage() {
         return (
           <div className="flex gap-2 justify-end">
             {m.status === "ACTIVE" ? (
-              <button
-                onClick={() => handleSuspend(m.id)}
-                className="text-xs text-red-600 hover:underline"
-              >
+              <button onClick={() => handleSuspend(m.id)} className="text-xs text-red-600 hover:underline">
                 Suspend
               </button>
             ) : (
-              <button
-                onClick={() => handleActivate(m.id)}
-                className="text-xs text-green-600 hover:underline"
-              >
+              <button onClick={() => handleActivate(m.id)} className="text-xs text-green-600 hover:underline">
                 Activate
               </button>
             )}
@@ -126,18 +133,27 @@ export default function MembersPage() {
   const table = useReactTable({
     data: members,
     columns,
-    state: { globalFilter },
-    onGlobalFilterChange: setGlobalFilter,
+    state: { globalFilter, pagination },
+    onGlobalFilterChange: (value) => {
+      setGlobalFilter(value);
+      // Filter change resets page — handled by the useEffect above
+    },
+    onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
   });
+
+  const totalFiltered = table.getFilteredRowModel().rows.length;
 
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold text-zinc-900">Members</h1>
-          <p className="text-sm text-zinc-500 mt-0.5">{members.length} total</p>
+          <p className="text-sm text-zinc-500 mt-0.5">
+            {totalFiltered} of {members.length} total
+          </p>
         </div>
         <button
           onClick={() => setShowCreate(true)}
@@ -178,10 +194,7 @@ export default function MembersPage() {
               {table.getHeaderGroups().map((hg) => (
                 <tr key={hg.id}>
                   {hg.headers.map((h) => (
-                    <th
-                      key={h.id}
-                      className="px-4 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wide"
-                    >
+                    <th key={h.id} className="px-4 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wide">
                       {flexRender(h.column.columnDef.header, h.getContext())}
                     </th>
                   ))}
@@ -210,6 +223,32 @@ export default function MembersPage() {
           </table>
         )}
       </div>
+
+      {/* Pagination controls */}
+      {totalFiltered > PAGE_SIZE && (
+        <div className="flex items-center justify-between text-sm text-zinc-500">
+          <span>
+            Page {table.getState().pagination.pageIndex + 1} of{" "}
+            {table.getPageCount()}
+          </span>
+          <div className="flex gap-2">
+            <button
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+              className="rounded-lg border border-zinc-200 p-1.5 hover:bg-zinc-50 disabled:opacity-40"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <button
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+              className="rounded-lg border border-zinc-200 p-1.5 hover:bg-zinc-50 disabled:opacity-40"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        </div>
+      )}
 
       {selected && (
         <MemberModal

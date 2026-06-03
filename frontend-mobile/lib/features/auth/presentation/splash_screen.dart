@@ -16,6 +16,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnim;
+  bool _hasNavigated = false;
 
   @override
   void initState() {
@@ -26,12 +27,41 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     );
     _fadeAnim = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
     _controller.forward();
-    _checkSession();
+
+    // Fix: use addPostFrameCallback to check and act on the INITIAL state
+    // before registering the listener. This prevents the redirect loop where
+    // ref.listen in build() only fires on state *changes*, so if the state
+    // is already `authenticated` (e.g. hot-restart), the listener never fires
+    // and the user gets stuck on the splash screen indefinitely.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final currentState = ref.read(authNotifierProvider);
+
+      if (currentState.status == AuthStatus.authenticated) {
+        _navigateOnce('/home');
+        return;
+      }
+      if (currentState.status == AuthStatus.unauthenticated) {
+        _navigateOnce('/login');
+        return;
+      }
+
+      // State is still `unknown` — start the async session check
+      _checkSession();
+    });
   }
 
   Future<void> _checkSession() async {
-    await Future.delayed(const Duration(milliseconds: 1500));
+    // Minimum splash display time for branding
+    await Future.delayed(const Duration(milliseconds: 1200));
+    if (!mounted) return;
     await ref.read(authNotifierProvider.notifier).checkSession();
+  }
+
+  void _navigateOnce(String path) {
+    if (_hasNavigated || !mounted) return;
+    _hasNavigated = true;
+    context.go(path);
   }
 
   @override
@@ -42,11 +72,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    // Fix: guard with _hasNavigated so a widget rebuild after navigation
+    // (e.g. triggered by Riverpod) doesn't fire context.go a second time.
     ref.listen<AuthState>(authNotifierProvider, (_, state) {
+      if (_hasNavigated) return;
       if (state.status == AuthStatus.authenticated) {
-        context.go('/home');
+        _navigateOnce('/home');
       } else if (state.status == AuthStatus.unauthenticated) {
-        context.go('/login');
+        _navigateOnce('/login');
       }
     });
 

@@ -1,0 +1,56 @@
+{
+  "openapi": "3.0.3",
+  "info": { "title": "Veltro Subscription Service API", "version": "1.0.0", "description": "Subscription lifecycle (TRIAL/SESSION/MONTHLY/ANNUAL), invoices, financial reports, and auto-renewal." },
+  "servers": [{ "url": "http://localhost:8083", "description": "Local development" }],
+  "tags": [{ "name": "Subscriptions" }, { "name": "Invoices" }, { "name": "Reports" }],
+  "paths": {
+    "/api/v1/subscriptions/plans": {
+      "get": { "tags": ["Subscriptions"], "summary": "List all plans with pricing", "responses": { "200": { "description": "Plan list", "content": { "application/json": { "schema": { "properties": { "data": { "type": "array", "items": { "$ref": "#/components/schemas/PlanInfo" } } } } } } } } }
+    },
+    "/api/v1/subscriptions": {
+      "post": { "tags": ["Subscriptions"], "summary": "Create/activate a subscription for a member", "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateSubscriptionRequest" } } } }, "responses": { "201": { "description": "Subscription created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SubscriptionApiResponse" } } } }, "409": { "description": "Member already has an active subscription" } } },
+      "get": { "tags": ["Subscriptions"], "summary": "List all subscriptions (ADMIN only, paginated)", "parameters": [{ "in": "header", "name": "X-User-Role", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "Paginated subscriptions" } } }
+    },
+    "/api/v1/subscriptions/{memberId}": {
+      "get": { "tags": ["Subscriptions"], "summary": "Get active/paused subscription for a member", "parameters": [{ "in": "path", "name": "memberId", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Active subscription", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SubscriptionApiResponse" } } } }, "404": { "description": "No active subscription" } } }
+    },
+    "/api/v1/subscriptions/{memberId}/all": {
+      "get": { "tags": ["Subscriptions"], "summary": "Get full subscription history for a member", "parameters": [{ "in": "path", "name": "memberId", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "All subscriptions" } } }
+    },
+    "/api/v1/subscriptions/{id}/cancel": {
+      "put": { "tags": ["Subscriptions"], "summary": "Cancel subscription", "parameters": [{ "in": "path", "name": "id", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Subscription cancelled" }, "422": { "description": "Already cancelled/expired" } } }
+    },
+    "/api/v1/subscriptions/{id}/pause": {
+      "put": { "tags": ["Subscriptions"], "summary": "Pause subscription (max 2 months/year)", "parameters": [{ "in": "path", "name": "id", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Subscription paused" }, "422": { "description": "Not ACTIVE or 2-month limit exceeded" } } }
+    },
+    "/api/v1/subscriptions/{id}/resume": {
+      "put": { "tags": ["Subscriptions"], "summary": "Resume paused subscription (extends endDate by pause duration)", "parameters": [{ "in": "path", "name": "id", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Subscription resumed" } } }
+    },
+    "/api/v1/subscriptions/{id}/auto-renew": {
+      "put": { "tags": ["Subscriptions"], "summary": "Toggle auto-renewal flag", "parameters": [{ "in": "path", "name": "id", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Auto-renew toggled" } } }
+    },
+    "/api/v1/subscriptions/{memberId}/invoices": {
+      "get": { "tags": ["Invoices"], "summary": "List all payment records for a member", "parameters": [{ "in": "path", "name": "memberId", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Invoice list" } } }
+    },
+    "/api/v1/subscriptions/{memberId}/invoices/{id}": {
+      "get": { "tags": ["Invoices"], "summary": "Get single invoice detail", "parameters": [{ "in": "path", "name": "memberId", "required": true, "schema": { "type": "integer" } }, { "in": "path", "name": "id", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Invoice detail" } } }
+    },
+    "/api/v1/subscriptions/reports/summary": {
+      "get": { "tags": ["Reports"], "summary": "Summary: active count, revenue totals", "responses": { "200": { "description": "Summary stats", "content": { "application/json": { "schema": { "properties": { "data": { "properties": { "totalActive": { "type": "integer" }, "totalPaused": { "type": "integer" }, "trialsActive": { "type": "integer" }, "totalRevenue": { "type": "number" }, "currentMonthRevenue": { "type": "number" } } } } } } } } }
+    },
+    "/api/v1/subscriptions/reports/revenue": {
+      "get": { "tags": ["Reports"], "summary": "Monthly revenue breakdown", "responses": { "200": { "description": "Array of {year, month, total}" } } }
+    },
+    "/api/v1/subscriptions/reports/distribution": {
+      "get": { "tags": ["Reports"], "summary": "Active plan distribution (count per plan type)", "responses": { "200": { "description": "Array of {plan, count}" } } }
+    }
+  },
+  "components": {
+    "schemas": {
+      "PlanInfo": { "type": "object", "properties": { "plan": { "type": "string", "enum": ["TRIAL","SESSION","MONTHLY","ANNUAL"] }, "durationDays": { "type": "integer" }, "price": { "type": "number" }, "description": { "type": "string" } } },
+      "CreateSubscriptionRequest": { "type": "object", "required": ["memberId","plan"], "properties": { "memberId": { "type": "integer" }, "memberEmail": { "type": "string" }, "plan": { "type": "string", "enum": ["TRIAL","SESSION","MONTHLY","ANNUAL"] }, "paymentMethod": { "type": "string", "enum": ["CARD","CASH","TRANSFER","AUTO_RENEWAL"] }, "autoRenew": { "type": "boolean", "default": false } } },
+      "SubscriptionResponse": { "type": "object", "properties": { "id": { "type": "integer" }, "memberId": { "type": "integer" }, "memberEmail": { "type": "string" }, "plan": { "type": "string" }, "planPrice": { "type": "number" }, "status": { "type": "string", "enum": ["ACTIVE","PAUSED","CANCELLED","EXPIRED"] }, "startDate": { "type": "string", "format": "date" }, "endDate": { "type": "string", "format": "date" }, "autoRenew": { "type": "boolean" }, "pausedMonthsUsed": { "type": "integer" }, "daysRemaining": { "type": "integer" } } },
+      "SubscriptionApiResponse": { "type": "object", "properties": { "success": { "type": "boolean" }, "message": { "type": "string" }, "data": { "$ref": "#/components/schemas/SubscriptionResponse" } } }
+    }
+  }
+}

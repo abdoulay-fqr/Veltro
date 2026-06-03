@@ -1,0 +1,44 @@
+{
+  "openapi": "3.0.3",
+  "info": { "title": "Veltro Booking Service API", "version": "1.0.0", "description": "Course scheduling, reservation with waitlist management, attendance tracking, and absence monitoring." },
+  "servers": [{ "url": "http://localhost:8084", "description": "Local development" }],
+  "tags": [{ "name": "Courses" }, { "name": "Bookings" }, { "name": "Attendance" }],
+  "paths": {
+    "/api/v1/courses": {
+      "post": { "tags": ["Courses"], "summary": "Create a course (COACH only)", "parameters": [{ "in": "header", "name": "X-User-Id", "required": true, "schema": { "type": "integer" } }, { "in": "header", "name": "X-User-Role", "required": true, "schema": { "type": "string" } }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateCourseRequest" } } } }, "responses": { "201": { "description": "Course created" } } },
+      "get": { "tags": ["Courses"], "summary": "List courses with optional filters", "parameters": [{ "in": "query", "name": "from", "schema": { "type": "string", "format": "date-time" } }, { "in": "query", "name": "to", "schema": { "type": "string", "format": "date-time" } }, { "in": "query", "name": "level", "schema": { "type": "string", "enum": ["BEGINNER","INTERMEDIATE","ADVANCED"] } }, { "in": "query", "name": "coachId", "schema": { "type": "integer" } }, { "in": "query", "name": "status", "schema": { "type": "string", "enum": ["SCHEDULED","CANCELLED","COMPLETED"] } }], "responses": { "200": { "description": "Paginated course list" } } }
+    },
+    "/api/v1/courses/{id}": {
+      "get": { "tags": ["Courses"], "summary": "Course detail with enrolled count and available spots", "parameters": [{ "in": "path", "name": "id", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Course detail" } } },
+      "put": { "tags": ["Courses"], "summary": "Update course (COACH owner only)", "parameters": [{ "in": "path", "name": "id", "required": true, "schema": { "type": "integer" } }, { "in": "header", "name": "X-User-Id", "required": true, "schema": { "type": "integer" } }], "requestBody": { "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UpdateCourseRequest" } } } }, "responses": { "200": { "description": "Course updated" } } },
+      "delete": { "tags": ["Courses"], "summary": "Cancel course — publishes CourseCancelled event, notifies booked members", "parameters": [{ "in": "path", "name": "id", "required": true, "schema": { "type": "integer" } }, { "in": "header", "name": "X-User-Id", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Course cancelled" } } }
+    },
+    "/api/v1/bookings": {
+      "post": { "tags": ["Bookings"], "summary": "Book a course (validates 7-day window + active subscription)", "parameters": [{ "in": "header", "name": "X-User-Id", "required": true, "schema": { "type": "integer" } }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BookingRequest" } } } }, "responses": { "201": { "description": "Booked or waitlisted", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BookingResponse" } } } }, "409": { "description": "Already booked" }, "422": { "description": "Booking window exceeded or subscription invalid" }, "503": { "description": "Subscription service unavailable" } } }
+    },
+    "/api/v1/bookings/{id}": {
+      "delete": { "tags": ["Bookings"], "summary": "Cancel booking (must be > 2 hours before course start)", "parameters": [{ "in": "path", "name": "id", "required": true, "schema": { "type": "integer" } }, { "in": "header", "name": "X-User-Id", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Booking cancelled; first waitlisted member promoted if applicable" }, "422": { "description": "Cancellation window elapsed (< 2h before course)" } } }
+    },
+    "/api/v1/bookings/member/{memberId}": {
+      "get": { "tags": ["Bookings"], "summary": "Get member's bookings", "parameters": [{ "in": "path", "name": "memberId", "required": true, "schema": { "type": "integer" } }, { "in": "query", "name": "status", "schema": { "type": "string", "enum": ["BOOKED","WAITLISTED","CANCELLED"] } }], "responses": { "200": { "description": "Booking list" } } }
+    },
+    "/api/v1/bookings/course/{courseId}": {
+      "get": { "tags": ["Bookings"], "summary": "List all registrations for a course (COACH/ADMIN only)", "parameters": [{ "in": "path", "name": "courseId", "required": true, "schema": { "type": "integer" } }, { "in": "header", "name": "X-User-Id", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Registration list" } } }
+    },
+    "/api/v1/attendance": {
+      "post": { "tags": ["Attendance"], "summary": "Mark attendance for a course (COACH only, after course start time)", "parameters": [{ "in": "header", "name": "X-User-Id", "required": true, "schema": { "type": "integer" } }, { "in": "header", "name": "X-User-Role", "required": true, "schema": { "type": "string" } }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MarkAttendanceRequest" } } } }, "responses": { "200": { "description": "Attendance recorded. Absent members with 3 absences are automatically suspended." } } }
+    },
+    "/api/v1/attendance/course/{courseId}": {
+      "get": { "tags": ["Attendance"], "summary": "Get attendance records for a course", "parameters": [{ "in": "path", "name": "courseId", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Attendance list" } } }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CreateCourseRequest": { "type": "object", "required": ["name","dateTime","capacity","level"], "properties": { "name": { "type": "string" }, "description": { "type": "string" }, "dateTime": { "type": "string", "format": "date-time" }, "durationMinutes": { "type": "integer", "default": 60 }, "capacity": { "type": "integer", "minimum": 1 }, "level": { "type": "string", "enum": ["BEGINNER","INTERMEDIATE","ADVANCED"] }, "room": { "type": "string" } } },
+      "UpdateCourseRequest": { "type": "object", "properties": { "name": { "type": "string" }, "description": { "type": "string" }, "dateTime": { "type": "string", "format": "date-time" }, "durationMinutes": { "type": "integer" }, "capacity": { "type": "integer" }, "level": { "type": "string" }, "room": { "type": "string" } } },
+      "BookingRequest": { "type": "object", "required": ["courseId"], "properties": { "courseId": { "type": "integer" }, "memberEmail": { "type": "string" } } },
+      "BookingResponse": { "type": "object", "properties": { "id": { "type": "integer" }, "courseId": { "type": "integer" }, "memberId": { "type": "integer" }, "status": { "type": "string", "enum": ["BOOKED","WAITLISTED","CANCELLED"] }, "waitlistPosition": { "type": "integer", "nullable": true }, "registeredAt": { "type": "string" }, "cancelledAt": { "type": "string", "nullable": true }, "promotedAt": { "type": "string", "nullable": true } } },
+      "MarkAttendanceRequest": { "type": "object", "required": ["courseId","records"], "properties": { "courseId": { "type": "integer" }, "records": { "type": "array", "items": { "properties": { "memberId": { "type": "integer" }, "memberEmail": { "type": "string" }, "present": { "type": "boolean" } } } } } }
+    }
+  }
+}

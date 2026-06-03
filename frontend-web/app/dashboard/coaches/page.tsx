@@ -13,6 +13,7 @@ import { coachesApi, CoachResponse } from "@/lib/api/coaches";
 import { useSearchParams } from "next/navigation";
 import NfcSimulator from "@/components/dashboard/NfcSimulator";
 import CreateCoachForm from "@/components/dashboard/CreateCoachForm";
+import { apiError } from "@/lib/utils/api-error";
 import { UserPlus, Search, CreditCard, Users } from "lucide-react";
 
 type Tab = "list" | "nfc";
@@ -33,8 +34,8 @@ export default function CoachesPage() {
     try {
       const res = await coachesApi.list({ size: 100 });
       setCoaches(res.data.data?.content ?? []);
-    } catch {
-      toast.error("Failed to load coaches");
+    } catch (err) {
+      apiError(err, "Failed to load coaches");
     } finally {
       setLoading(false);
     }
@@ -47,8 +48,8 @@ export default function CoachesPage() {
       await coachesApi.suspend(id);
       toast.success("Coach suspended");
       loadCoaches();
-    } catch {
-      toast.error("Failed to suspend coach");
+    } catch (err) {
+      apiError(err, "Failed to suspend coach");
     }
   };
 
@@ -57,8 +58,8 @@ export default function CoachesPage() {
       await coachesApi.activate(id);
       toast.success("Coach activated");
       loadCoaches();
-    } catch {
-      toast.error("Failed to activate coach");
+    } catch (err) {
+      apiError(err, "Failed to activate coach");
     }
   };
 
