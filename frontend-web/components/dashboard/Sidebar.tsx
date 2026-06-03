@@ -10,6 +10,9 @@ import {
   CreditCard,
   BarChart2,
   Receipt,
+  CalendarDays,
+  ClipboardCheck,
+  TrendingUp,
   LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -20,11 +23,14 @@ const adminNav = [
   { label: "Coaches", href: "/dashboard/coaches", icon: UserCheck },
   { label: "NFC Simulator", href: "/dashboard/coaches?tab=nfc", icon: CreditCard },
   { label: "Subscriptions", href: "/dashboard/subscriptions", icon: Receipt },
-  { label: "Reports", href: "/dashboard/subscriptions/reports", icon: BarChart2 },
+  { label: "Revenue Reports", href: "/dashboard/subscriptions/reports", icon: BarChart2 },
+  { label: "Course Stats", href: "/dashboard/admin/courses", icon: TrendingUp },
 ];
 
 const coachNav = [
   { label: "My Profile", href: "/dashboard/coach", icon: UserCheck },
+  { label: "My Courses", href: "/dashboard/courses", icon: CalendarDays },
+  { label: "Attendance", href: "/dashboard/attendance", icon: ClipboardCheck },
 ];
 
 export default function Sidebar() {

@@ -59,6 +59,20 @@ class HomeScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
             _QuickAction(
+              icon: Icons.fitness_center_outlined,
+              title: 'Classes',
+              subtitle: 'Browse and book gym sessions',
+              onTap: () => context.push('/courses'),
+            ),
+            const SizedBox(height: 12),
+            _QuickAction(
+              icon: Icons.calendar_today_outlined,
+              title: 'My Bookings',
+              subtitle: 'Upcoming, past, and cancelled',
+              onTap: () => context.push('/my-bookings/1'),
+            ),
+            const SizedBox(height: 12),
+            _QuickAction(
               icon: Icons.settings_outlined,
               title: 'Settings',
               subtitle: 'Notifications, password, account',

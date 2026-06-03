@@ -7,26 +7,16 @@ import '../features/home/presentation/home_screen.dart';
 import '../features/profile/presentation/profile_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import '../features/subscription/presentation/subscription_screen.dart';
+import '../features/booking/presentation/courses_screen.dart';
+import '../features/booking/presentation/my_bookings_screen.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/',
   routes: [
-    GoRoute(
-      path: '/',
-      builder: (context, state) => const SplashScreen(),
-    ),
-    GoRoute(
-      path: '/login',
-      builder: (context, state) => const LoginScreen(),
-    ),
-    GoRoute(
-      path: '/register',
-      builder: (context, state) => const RegisterScreen(),
-    ),
-    GoRoute(
-      path: '/home',
-      builder: (context, state) => const HomeScreen(),
-    ),
+    GoRoute(path: '/', builder: (_, __) => const SplashScreen()),
+    GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
+    GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
+    GoRoute(path: '/home', builder: (_, __) => const HomeScreen()),
     GoRoute(
       path: '/profile/:id',
       builder: (context, state) {
@@ -34,10 +24,7 @@ final appRouter = GoRouter(
         return ProfileScreen(memberProfileId: id);
       },
     ),
-    GoRoute(
-      path: '/settings',
-      builder: (context, state) => const SettingsScreen(),
-    ),
+    GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),
     GoRoute(
       path: '/subscription/:id',
       builder: (context, state) {
@@ -45,14 +32,16 @@ final appRouter = GoRouter(
         return SubscriptionScreen(memberProfileId: id);
       },
     ),
+    GoRoute(path: '/courses', builder: (_, __) => const CoursesScreen()),
     GoRoute(
-      path: '/dashboard',
-      builder: (context, state) => const _PlaceholderScreen(title: 'Dashboard'),
+      path: '/my-bookings/:memberId',
+      builder: (context, state) {
+        final id = int.tryParse(state.pathParameters['memberId'] ?? '0') ?? 0;
+        return MyBookingsScreen(memberId: id);
+      },
     ),
-    GoRoute(
-      path: '/coach',
-      builder: (context, state) => const _PlaceholderScreen(title: 'Coach Portal'),
-    ),
+    GoRoute(path: '/dashboard', builder: (_, __) => const _PlaceholderScreen(title: 'Dashboard')),
+    GoRoute(path: '/coach', builder: (_, __) => const _PlaceholderScreen(title: 'Coach Portal')),
   ],
 );
 
@@ -61,15 +50,9 @@ class _PlaceholderScreen extends StatelessWidget {
   const _PlaceholderScreen({required this.title});
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: Center(
-        child: Text(
-          '$title — coming soon',
-          style: const TextStyle(color: Colors.white70),
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(title: Text(title)),
+        body: Center(child: Text('$title — coming soon',
+            style: const TextStyle(color: Colors.white70))),
+      );
 }
