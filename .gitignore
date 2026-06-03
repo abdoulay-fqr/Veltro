@@ -42,3 +42,22 @@ Thumbs.db
 # Environment files (never commit secrets)
 .env
 *.env
+application-secrets.properties
+application-local.properties
+
+# Sensitive files
+**/src/main/resources/application-prod.properties
+
+# Uploads (user avatars)
+backend/uploads/
+
+# k6 reports
+k6-report*.json
+
+# Zip archives
+docs/*.zip
+
+# Flutter generated
+frontend-mobile/.flutter-plugins
+frontend-mobile/.flutter-plugins-dependencies
+frontend-mobile/pubspec.lock

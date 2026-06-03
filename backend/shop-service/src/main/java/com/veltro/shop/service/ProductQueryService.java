@@ -5,6 +5,7 @@ import com.veltro.shop.entity.ProductCategory;
 import com.veltro.shop.exception.ResourceNotFoundException;
 import com.veltro.shop.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,7 @@ public class ProductQueryService {
         return productRepo.findByActiveTrueOrderByCreatedAtDesc(pageable).map(ProductResponse::from);
     }
 
+    @Cacheable(value = "productById", key = "#id")
     @Transactional(readOnly = true)
     public ProductResponse getById(Long id) {
         return ProductResponse.from(productRepo.findById(id)

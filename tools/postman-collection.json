@@ -1,0 +1,526 @@
+{
+  "info": {
+    "name": "Veltro Platform — Full Integration Tests",
+    "_postman_id": "veltro-integration-v1",
+    "description": "End-to-end integration tests covering all 12 steps of the Veltro user journey. Run in sequence — each test stores variables for subsequent requests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url",        "value": "http://localhost:8080/api/v1" },
+    { "key": "member_token",    "value": "" },
+    { "key": "coach_token",     "value": "" },
+    { "key": "admin_token",     "value": "" },
+    { "key": "member_id",       "value": "" },
+    { "key": "member_profile_id","value": "" },
+    { "key": "subscription_id", "value": "" },
+    { "key": "course_id",       "value": "" },
+    { "key": "booking_id",      "value": "" },
+    { "key": "conversation_id", "value": "" },
+    { "key": "order_id",        "value": "" },
+    { "key": "product_id",      "value": "" },
+    { "key": "chat_history",    "value": "[]" }
+  ],
+  "item": [
+    {
+      "name": "01 — Auth: Register Member",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('Has access token', () => {",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.data.accessToken).to.be.a('string');",
+              "    pm.collectionVariables.set('member_token', body.data.accessToken);",
+              "    pm.collectionVariables.set('member_id', body.data.userId);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"identifier\": \"integration-member@veltro.gym\", \"password\": \"Test@2024!\", \"role\": \"MEMBER\"}"
+        },
+        "url": "{{base_url}}/auth/register"
+      }
+    },
+    {
+      "name": "02 — Member Profile: Create",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 201', () => pm.response.to.have.status(201));",
+              "const body = pm.response.json();",
+              "pm.collectionVariables.set('member_profile_id', body.data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"},
+          {"key": "Authorization", "value": "Bearer {{member_token}}"}
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"userId\": {{member_id}}, \"identifier\": \"integration-member@veltro.gym\", \"firstname\": \"Jane\", \"lastname\": \"Demo\", \"phone\": \"+1-555-0001\"}"
+        },
+        "url": "{{base_url}}/users/members"
+      }
+    },
+    {
+      "name": "03 — Subscription: Verify TRIAL Auto-Created",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('TRIAL subscription exists', () => {",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.data.plan).to.equal('TRIAL');",
+              "    pm.expect(body.data.status).to.equal('ACTIVE');",
+              "    pm.collectionVariables.set('subscription_id', body.data.id);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{"key": "Authorization", "value": "Bearer {{member_token}}"}],
+        "url": "{{base_url}}/subscriptions/{{member_id}}"
+      }
+    },
+    {
+      "name": "04 — Subscription: Cancel TRIAL",
+      "request": {
+        "method": "PUT",
+        "header": [{"key": "Authorization", "value": "Bearer {{member_token}}"}],
+        "url": "{{base_url}}/subscriptions/{{subscription_id}}/cancel"
+      }
+    },
+    {
+      "name": "05 — Subscription: Upgrade to MONTHLY",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 201', () => pm.response.to.have.status(201));",
+              "pm.test('MONTHLY plan active', () => {",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.data.plan).to.equal('MONTHLY');",
+              "    pm.collectionVariables.set('subscription_id', body.data.id);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"},
+          {"key": "Authorization", "value": "Bearer {{member_token}}"}
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"memberId\": {{member_id}}, \"memberEmail\": \"integration-member@veltro.gym\", \"plan\": \"MONTHLY\", \"paymentMethod\": \"CARD\"}"
+        },
+        "url": "{{base_url}}/subscriptions"
+      }
+    },
+    {
+      "name": "06 — Auth: Login as Coach",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.collectionVariables.set('coach_token', body.data.accessToken);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"identifier\": \"coach1@veltro.gym\", \"password\": \"Veltro@2024\"}"
+        },
+        "url": "{{base_url}}/auth/login"
+      }
+    },
+    {
+      "name": "07 — Course: Coach Creates Course",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 201', () => pm.response.to.have.status(201));",
+              "const body = pm.response.json();",
+              "pm.collectionVariables.set('course_id', body.data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"},
+          {"key": "Authorization", "value": "Bearer {{coach_token}}"}
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"name\": \"Integration Test Yoga\", \"description\": \"Demo class for integration test\", \"dateTime\": \"2026-12-01T10:00:00\", \"durationMinutes\": 60, \"capacity\": 20, \"level\": \"BEGINNER\", \"room\": \"Studio A\"}"
+        },
+        "url": "{{base_url}}/courses"
+      }
+    },
+    {
+      "name": "08 — Booking: Member Books Course",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 201', () => pm.response.to.have.status(201));",
+              "const body = pm.response.json();",
+              "pm.expect(body.data.status).to.equal('BOOKED');",
+              "pm.collectionVariables.set('booking_id', body.data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"},
+          {"key": "Authorization", "value": "Bearer {{member_token}}"}
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"courseId\": {{course_id}}, \"memberEmail\": \"integration-member@veltro.gym\"}"
+        },
+        "url": "{{base_url}}/bookings"
+      }
+    },
+    {
+      "name": "09 — Activity: NFC Entry Simulated",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 201', () => pm.response.to.have.status(201));",
+              "pm.test('Direction is IN', () => {",
+              "    pm.expect(pm.response.json().data.direction).to.equal('IN');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"},
+          {"key": "Authorization", "value": "Bearer {{member_token}}"}
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"cardUid\": \"card001\", \"direction\": \"IN\"}"
+        },
+        "url": "{{base_url}}/activity/entry"
+      }
+    },
+    {
+      "name": "10 — Activity: Machine Session Recorded",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 201', () => pm.response.to.have.status(201));",
+              "pm.test('Session saved', () => {",
+              "    const s = pm.response.json().data;",
+              "    pm.expect(s.machineType).to.equal('TREADMILL');",
+              "    pm.expect(s.caloriesBurned).to.be.above(0);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"},
+          {"key": "Authorization", "value": "Bearer {{member_token}}"}
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"memberId\": {{member_id}}, \"memberEmail\": \"integration-member@veltro.gym\", \"machineType\": \"TREADMILL\", \"durationMinutes\": 30, \"caloriesBurned\": 350, \"distanceKm\": 5.2, \"avgHeartRate\": 145}"
+        },
+        "url": "{{base_url}}/activity/session"
+      }
+    },
+    {
+      "name": "11 — Messaging: Start Conversation",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 201', () => pm.response.to.have.status(201));",
+              "pm.collectionVariables.set('conversation_id', pm.response.json().data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"},
+          {"key": "Authorization", "value": "Bearer {{member_token}}"}
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"coachId\": 11}"
+        },
+        "url": "{{base_url}}/conversations"
+      }
+    },
+    {
+      "name": "12 — Messaging: Send Message to Coach",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 201', () => pm.response.to.have.status(201));",
+              "pm.test('Message saved', () => {",
+              "    pm.expect(pm.response.json().data.senderRole).to.equal('MEMBER');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"},
+          {"key": "Authorization", "value": "Bearer {{member_token}}"}
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"content\": \"Hi Coach! Looking forward to our session tomorrow.\"}"
+        },
+        "url": "{{base_url}}/conversations/{{conversation_id}}/messages"
+      }
+    },
+    {
+      "name": "13 — Shop: List Products",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "const products = pm.response.json().data.content;",
+              "if (products && products.length > 0) {",
+              "    pm.collectionVariables.set('product_id', products[0].id);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{"key": "Authorization", "value": "Bearer {{member_token}}"}],
+        "url": "{{base_url}}/shop/products"
+      }
+    },
+    {
+      "name": "14 — Shop: Member Places Order",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 201', () => pm.response.to.have.status(201));",
+              "pm.test('Order is PENDING', () => {",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.data.status).to.equal('PENDING');",
+              "    pm.collectionVariables.set('order_id', body.data.id);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"},
+          {"key": "Authorization", "value": "Bearer {{member_token}}"}
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"items\": [{\"productId\": {{product_id}}, \"quantity\": 1}], \"shippingAddress\": \"123 Integration Test St, Demo City 00000\"}"
+        },
+        "url": "{{base_url}}/shop/orders"
+      }
+    },
+    {
+      "name": "15 — Chatbot: 'What's my next class?'",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('Reply is not empty', () => {",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.data.reply).to.be.a('string').and.have.length.above(5);",
+              "    pm.collectionVariables.set('chat_history', JSON.stringify(body.data.updatedHistory));",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"},
+          {"key": "Authorization", "value": "Bearer {{member_token}}"}
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"userId\": {{member_id}}, \"message\": \"What is my next class?\", \"history\": []}"
+        },
+        "url": "{{base_url}}/chat/message"
+      }
+    },
+    {
+      "name": "16 — Auth: Login as Admin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.collectionVariables.set('admin_token', pm.response.json().data.accessToken);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"identifier\": \"admin@veltro.gym\", \"password\": \"Veltro@2024\"}"
+        },
+        "url": "{{base_url}}/auth/login"
+      }
+    },
+    {
+      "name": "17 — Reports: Admin Views Financial Summary",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('Summary has required fields', () => {",
+              "    const d = pm.response.json().data;",
+              "    pm.expect(d).to.have.property('totalActive');",
+              "    pm.expect(d).to.have.property('totalRevenue');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{"key": "Authorization", "value": "Bearer {{admin_token}}"}],
+        "url": "{{base_url}}/subscriptions/reports/summary"
+      }
+    },
+    {
+      "name": "18 — Activity: Admin Views Live Entry Log",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('Live entries array', () => {",
+              "    pm.expect(pm.response.json().data).to.be.an('array');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{"key": "Authorization", "value": "Bearer {{admin_token}}"}],
+        "url": "{{base_url}}/activity/entries/live"
+      }
+    },
+    {
+      "name": "19 — Activity: Admin Heatmap Stats",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('Heatmap has 24 hours', () => {",
+              "    const d = pm.response.json().data;",
+              "    pm.expect(d.entriesByHour).to.be.an('object');",
+              "    pm.expect(Object.keys(d.entriesByHour).length).to.equal(24);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{"key": "Authorization", "value": "Bearer {{admin_token}}"}],
+        "url": "{{base_url}}/activity/stats/admin"
+      }
+    },
+    {
+      "name": "20 — Shop: Admin Confirms Order",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('Order CONFIRMED', () => {",
+              "    pm.expect(pm.response.json().data.status).to.equal('CONFIRMED');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [{"key": "Authorization", "value": "Bearer {{admin_token}}"}],
+        "url": "{{base_url}}/shop/admin/orders/{{order_id}}/confirm"
+      }
+    }
+  ]
+}

@@ -6,6 +6,7 @@ import com.veltro.booking.entity.CourseStatus;
 import com.veltro.booking.exception.ResourceNotFoundException;
 import com.veltro.booking.repository.CourseRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,7 @@ public class CourseQueryService {
         return courseRepo.findAll(spec, pageable).map(CourseResponse::from);
     }
 
+    @Cacheable(value = "courseById", key = "#id")
     @Transactional(readOnly = true)
     public CourseResponse findById(Long id) {
         return CourseResponse.from(

@@ -58,6 +58,10 @@
         <!-- Common lib -->
         <dependency><groupId>com.veltro</groupId><artifactId>common-lib</artifactId><version>1.0.0</version></dependency>
 
+        <!-- Caching -->
+        <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-cache</artifactId></dependency>
+        <dependency><groupId>com.github.ben-manes.caffeine</groupId><artifactId>caffeine</artifactId></dependency>
+
         <!-- OpenAPI -->
         <dependency>
             <groupId>org.springdoc</groupId>
