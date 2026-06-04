@@ -15,7 +15,8 @@ import {
   PaymentRecordResponse,
 } from "@/lib/api/subscriptions";
 import { apiError } from "@/lib/utils/api-error";
-import { Search, X } from "lucide-react";
+import { Search, X, RefreshCw } from "lucide-react";
+import type { Plan } from "@/lib/api/subscriptions";
 
 const PLAN_COLORS: Record<string, string> = {
   TRIAL:   "bg-zinc-100 text-zinc-600",
@@ -40,6 +41,9 @@ export default function SubscriptionsPage() {
     sub: SubscriptionResponse;
     invoices: PaymentRecordResponse[];
   } | null>(null);
+  const [changePlanModal, setChangePlanModal] = useState<SubscriptionResponse | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<Plan>("MONTHLY");
+  const [changingPlan, setChangingPlan] = useState(false);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -62,6 +66,30 @@ export default function SubscriptionsPage() {
   const handleCancel = async (id: number) => {
     try { await subscriptionsApi.cancel(id); toast.success("Subscription cancelled"); loadData(); }
     catch (err) { apiError(err, "Failed to cancel subscription"); }
+  };
+
+  const handleChangePlan = async () => {
+    if (!changePlanModal) return;
+    setChangingPlan(true);
+    try {
+      // Cancel existing active/paused subscription first (create() rejects if one exists)
+      if (changePlanModal.status === "ACTIVE" || changePlanModal.status === "PAUSED") {
+        await subscriptionsApi.cancel(changePlanModal.id);
+      }
+      await subscriptionsApi.create({
+        memberId: changePlanModal.memberId,
+        memberEmail: changePlanModal.memberEmail ?? undefined,
+        plan: selectedPlan,
+        paymentMethod: "CARD",
+      });
+      toast.success(`Plan changed to ${selectedPlan}`);
+      setChangePlanModal(null);
+      loadData();
+    } catch (err) {
+      apiError(err, "Failed to change plan");
+    } finally {
+      setChangingPlan(false);
+    }
   };
 
   const loadInvoices = async (sub: SubscriptionResponse) => {
@@ -120,10 +148,18 @@ export default function SubscriptionsPage() {
       cell: (info) => {
         const s = info.row.original;
         return (
-          <div className="flex gap-2 justify-end text-xs">
+          <div className="flex gap-2 justify-end text-xs items-center">
             <button onClick={() => loadInvoices(s)} className="text-zinc-500 hover:text-zinc-800 hover:underline">
               Invoices
             </button>
+            {(s.status === "ACTIVE" || s.status === "PAUSED") && (
+              <button
+                onClick={() => { setSelectedPlan(s.plan); setChangePlanModal(s); }}
+                className="flex items-center gap-1 text-purple-600 hover:underline"
+              >
+                <RefreshCw size={11} /> Change Plan
+              </button>
+            )}
             {s.status === "ACTIVE" && (
               <button onClick={() => handleCancel(s.id)} className="text-red-600 hover:underline">
                 Cancel
@@ -211,6 +247,61 @@ export default function SubscriptionsPage() {
           </table>
         )}
       </div>
+
+      {/* Change Plan modal */}
+      {changePlanModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="w-full max-w-sm bg-white rounded-2xl shadow-xl p-6 space-y-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-semibold text-zinc-900">Change Plan</h2>
+                <p className="text-xs text-zinc-500 mt-0.5">
+                  Member #{changePlanModal.memberId} · current: {changePlanModal.plan}
+                </p>
+              </div>
+              <button onClick={() => setChangePlanModal(null)} className="text-zinc-400 hover:text-zinc-700">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              {(["TRIAL", "SESSION", "MONTHLY", "ANNUAL"] as Plan[]).map((plan) => (
+                <label key={plan}
+                  className={`flex items-center gap-3 rounded-lg border px-4 py-3 cursor-pointer transition-colors ${
+                    selectedPlan === plan ? "border-zinc-900 bg-zinc-50" : "border-zinc-200 hover:border-zinc-300"
+                  }`}>
+                  <input type="radio" name="plan" value={plan} checked={selectedPlan === plan}
+                    onChange={() => setSelectedPlan(plan)} className="accent-zinc-900" />
+                  <div>
+                    <p className="text-sm font-medium text-zinc-900">{plan}</p>
+                    <p className="text-xs text-zinc-500">
+                      {plan === "TRIAL" ? "7 days · Free" :
+                       plan === "SESSION" ? "1 day · $15" :
+                       plan === "MONTHLY" ? "30 days · $39" :
+                       "365 days · $374"}
+                    </p>
+                  </div>
+                </label>
+              ))}
+            </div>
+
+            <p className="text-xs text-zinc-400">
+              The current subscription will be cancelled and a new one activated immediately.
+            </p>
+
+            <div className="flex gap-3">
+              <button onClick={() => setChangePlanModal(null)}
+                className="flex-1 rounded-lg border border-zinc-200 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-50">
+                Cancel
+              </button>
+              <button onClick={handleChangePlan} disabled={changingPlan}
+                className="flex-1 rounded-lg bg-zinc-900 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50">
+                {changingPlan ? "Applying…" : "Apply Plan"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Invoice modal */}
       {invoiceModal && (

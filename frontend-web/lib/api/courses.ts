@@ -45,6 +45,7 @@ export interface AttendanceResponse {
 }
 
 export interface CreateCourseRequest {
+  coachId?: number;       // admin sets this; COACH endpoint ignores it (uses X-User-Id)
   name: string;
   description?: string;
   dateTime: string;

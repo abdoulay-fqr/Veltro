@@ -40,7 +40,10 @@ public class CourseController {
             @RequestHeader("X-User-Role") String role) {
 
         requireCoach(role);
-        req.setCoachId(userId);
+        // COACH: always use their own userId. ADMIN: may supply coachId in body.
+        if (req.getCoachId() == null) {
+            req.setCoachId(userId);
+        }
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Course created", commandService.create(req)));
     }
