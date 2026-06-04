@@ -80,6 +80,18 @@ public class AuthService {
         tokenBlacklistService.blacklist(accessToken);
     }
 
+    public void changePassword(Long userId, String currentPassword, String newPassword) {
+        AppUser user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            throw new RuntimeException("Current password is incorrect");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
+
     private AuthResponse generateTokens(AppUser user) {
         Map<String, Object> claims = Map.of(
                 "role",   user.getRole().name(),

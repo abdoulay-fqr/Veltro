@@ -1,6 +1,7 @@
 package com.veltro.auth.controller;
 
 import com.veltro.auth.dto.AuthResponse;
+import com.veltro.auth.dto.ChangePasswordRequest;
 import com.veltro.auth.dto.LoginRequest;
 import com.veltro.auth.dto.RefreshRequest;
 import com.veltro.auth.dto.RegisterRequest;
@@ -55,6 +56,14 @@ public class AuthController {
             @Valid @RequestBody RefreshRequest request) {
         AuthResponse response = authService.refresh(request);
         return ResponseEntity.ok(ApiResponse.success("Token refreshed", response));
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<ApiResponse<Void>> changePassword(
+            @Valid @RequestBody ChangePasswordRequest request,
+            @RequestHeader("X-User-Id") Long userId) {
+        authService.changePassword(userId, request.getCurrentPassword(), request.getNewPassword());
+        return ResponseEntity.ok(ApiResponse.success("Password changed successfully"));
     }
 
     @PostMapping("/logout")
