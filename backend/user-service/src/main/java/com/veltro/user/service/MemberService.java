@@ -36,6 +36,7 @@ public class MemberService {
 
         MemberProfile member = new MemberProfile();
         member.setUserId(req.getUserId());
+        member.setEmail(req.getIdentifier());
         member.setFirstname(req.getFirstname());
         member.setLastname(req.getLastname());
         member.setPhone(req.getPhone());

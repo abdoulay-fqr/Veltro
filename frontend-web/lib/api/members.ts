@@ -3,6 +3,7 @@ import api from "@/lib/api";
 export interface MemberResponse {
   id: number;
   userId: number;
+  email: string | null;
   firstname: string;
   lastname: string;
   phone: string | null;

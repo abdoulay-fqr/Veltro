@@ -20,6 +20,9 @@ public class MemberProfile {
     @Column(name = "user_id", nullable = false, unique = true)
     private Long userId;
 
+    @Column
+    private String email;
+
     @Column(nullable = false)
     private String firstname;
 

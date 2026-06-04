@@ -12,6 +12,7 @@ public class MemberResponse {
 
     private Long id;
     private Long userId;
+    private String email;
     private String firstname;
     private String lastname;
     private String phone;
@@ -26,6 +27,7 @@ public class MemberResponse {
         MemberResponse r = new MemberResponse();
         r.setId(m.getId());
         r.setUserId(m.getUserId());
+        r.setEmail(m.getEmail());
         r.setFirstname(m.getFirstname());
         r.setLastname(m.getLastname());
         r.setPhone(m.getPhone());

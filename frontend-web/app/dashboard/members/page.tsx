@@ -86,6 +86,7 @@ export default function MembersPage() {
         </button>
       ),
     },
+    { header: "Email", accessorKey: "email", cell: (i) => i.getValue() ?? "—" },
     { header: "Phone", accessorKey: "phone", cell: (i) => i.getValue() ?? "—" },
     {
       header: "Status",
