@@ -56,12 +56,12 @@ export default function LoginPage() {
     }
 
     const role = json.role as UserRole;
-    setUser({ identifier: data.identifier, role });
+    setUser({ identifier: data.identifier, role, userId: json.userId ?? undefined });
 
     if (role === "ADMIN" || role === "SUPER_ADMIN") {
       router.push("/dashboard");
     } else if (role === "COACH") {
-      router.push("/coach");
+      router.push("/dashboard/courses");
     } else {
       router.push("/unauthorized");
     }
