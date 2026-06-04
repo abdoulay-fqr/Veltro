@@ -72,6 +72,16 @@ public class CoachController {
         return ResponseEntity.ok(ApiResponse.success("Coach updated", coachService.update(id, req)));
     }
 
+    @Operation(summary = "Delete a coach profile (admin only)")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> delete(
+            @PathVariable Long id,
+            @RequestHeader("X-User-Role") String role) {
+        requireAdmin(role);
+        coachService.delete(id);
+        return ResponseEntity.ok(ApiResponse.success("Coach deleted"));
+    }
+
     @Operation(summary = "Upload coach avatar")
     @PostMapping("/{id}/avatar")
     public ResponseEntity<ApiResponse<CoachResponse>> uploadAvatar(

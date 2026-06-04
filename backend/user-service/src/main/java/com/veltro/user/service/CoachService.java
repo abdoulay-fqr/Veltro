@@ -11,18 +11,26 @@ import com.veltro.user.exception.ConflictException;
 import com.veltro.user.exception.ResourceNotFoundException;
 import com.veltro.user.repository.CoachProfileRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CoachService {
 
     private final CoachProfileRepository coachRepo;
+    private final RestTemplate restTemplate;
+
+    @Value("${AUTH_SERVICE_BASE_URL:http://localhost:8081}")
+    private String authServiceBaseUrl;
     private final AvatarStorageService avatarStorage;
     private final RabbitTemplate rabbitTemplate;
 
@@ -102,6 +110,21 @@ public class CoachService {
         String url = avatarStorage.store(file, "coach_" + id);
         coach.setAvatarUrl(url);
         return CoachResponse.from(coachRepo.save(coach));
+    }
+
+    // ── DELETE ───────────────────────────────────────────────────────────────
+
+    @Transactional
+    public void delete(Long id) {
+        CoachProfile coach = getOrThrow(id);
+        Long userId = coach.getUserId();
+        coachRepo.delete(coach);
+        try {
+            restTemplate.delete(authServiceBaseUrl + "/api/v1/auth/users/" + userId);
+        } catch (Exception e) {
+            log.warn("Coach profile {} deleted but auth user {} could not be removed: {}",
+                    id, userId, e.getMessage());
+        }
     }
 
     // ── SUSPEND / ACTIVATE ───────────────────────────────────────────────────

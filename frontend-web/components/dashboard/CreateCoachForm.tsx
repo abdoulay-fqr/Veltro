@@ -5,11 +5,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { coachesApi, CoachResponse } from "@/lib/api/coaches";
+import api from "@/lib/api";
 import { X } from "lucide-react";
 
-const schema = z.object({
-  userId: z.number({ coerce: true }).int().positive("User ID must be a positive integer"),
-  identifier: z.string().email("Must be a valid email"),
+// Base fields shared by create and edit
+const baseSchema = z.object({
+  identifier: z.string().optional(),
   firstname: z.string().min(1, "Required"),
   lastname: z.string().min(1, "Required"),
   phone: z.string().optional(),
@@ -18,7 +19,12 @@ const schema = z.object({
   certifications: z.string().optional(),
 });
 
-type FormValues = z.infer<typeof schema>;
+// In create mode, identifier must be a valid email
+const createSchema = baseSchema.extend({
+  identifier: z.string().email("Must be a valid email"),
+});
+
+type FormValues = z.infer<typeof baseSchema>;
 
 interface Props {
   coach?: CoachResponse;
@@ -33,10 +39,9 @@ export default function CreateCoachForm({ coach, onClose, onSaved }: Props) {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(isEdit ? baseSchema : createSchema),
     defaultValues: coach
       ? {
-          userId: coach.userId,
           identifier: "",
           firstname: coach.firstname,
           lastname: coach.lastname,
@@ -54,7 +59,14 @@ export default function CreateCoachForm({ coach, onClose, onSaved }: Props) {
         await coachesApi.update(coach.id, values);
         toast.success("Coach updated successfully");
       } else {
-        await coachesApi.create(values);
+        // Auto-register the auth user to get userId, then create the coach profile
+        const authRes = await api.post<{ data: { userId: number } }>("/auth/register", {
+          identifier: values.identifier,
+          password: "Veltro@2024",
+          role: "COACH",
+        });
+        const userId = authRes.data.data.userId;
+        await coachesApi.create({ ...values, userId });
         toast.success("Coach created successfully");
       }
       onSaved();
@@ -67,7 +79,6 @@ export default function CreateCoachForm({ coach, onClose, onSaved }: Props) {
   };
 
   const fields = [
-    { name: "userId" as const, label: "User ID", type: "number", hidden: isEdit },
     { name: "identifier" as const, label: "Email", type: "email", hidden: isEdit },
     { name: "firstname" as const, label: "First Name", type: "text" },
     { name: "lastname" as const, label: "Last Name", type: "text" },

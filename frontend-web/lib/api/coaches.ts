@@ -50,6 +50,10 @@ export const coachesApi = {
     return api.put<{ data: CoachResponse }>(`/users/coaches/${id}`, body);
   },
 
+  delete(id: number) {
+    return api.delete<{ data: null }>(`/users/coaches/${id}`);
+  },
+
   suspend(id: number) {
     return api.put<{ data: CoachResponse }>(`/users/coaches/${id}/suspend`);
   },

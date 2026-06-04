@@ -5,10 +5,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { membersApi } from "@/lib/api/members";
+import api from "@/lib/api";
 import { X } from "lucide-react";
 
 const schema = z.object({
-  userId: z.number({ coerce: true }).int().positive("User ID must be a positive integer"),
   identifier: z.string().email("Must be a valid email"),
   firstname: z.string().min(1, "Required"),
   lastname: z.string().min(1, "Required"),
@@ -32,7 +32,16 @@ export default function CreateMemberForm({ onClose, onCreated }: Props) {
 
   const onSubmit = async (values: FormValues) => {
     try {
-      await membersApi.create(values);
+      // 1. Register the auth user to obtain a userId
+      const authRes = await api.post<{ data: { userId: number } }>("/auth/register", {
+        identifier: values.identifier,
+        password: "Veltro@2024",  // admin-created members use the default password
+        role: "MEMBER",
+      });
+      const userId = authRes.data.data.userId;
+
+      // 2. Create the member profile linked to that userId
+      await membersApi.create({ ...values, userId });
       toast.success("Member created successfully");
       onCreated();
     } catch (err: unknown) {
@@ -54,7 +63,6 @@ export default function CreateMemberForm({ onClose, onCreated }: Props) {
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {[
-            { name: "userId" as const, label: "User ID", type: "number" },
             { name: "identifier" as const, label: "Email", type: "email" },
             { name: "firstname" as const, label: "First Name", type: "text" },
             { name: "lastname" as const, label: "Last Name", type: "text" },
