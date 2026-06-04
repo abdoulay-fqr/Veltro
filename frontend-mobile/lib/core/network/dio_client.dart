@@ -1,9 +1,10 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class DioClient {
-  static const String baseUrl = 'http://10.0.2.2:8080/api/v1';
-  // Use 'http://localhost:8080/api/v1' on iOS simulator or physical device
+  static String get baseUrl =>
+      kIsWeb ? 'http://localhost:8080/api/v1' : 'http://172.20.10.9:8080/api/v1';
 
   static const _storage = FlutterSecureStorage();
 

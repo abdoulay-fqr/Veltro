@@ -1,11 +1,22 @@
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../../../core/network/dio_client.dart';
 
 class AuthRepository {
-  static const String _baseUrl = 'http://localhost:8080/api/v1';
   static const _storage = FlutterSecureStorage();
-  final Dio _dio = Dio(BaseOptions(
-    baseUrl: _baseUrl,
+
+  /// On Flutter web, Dio sometimes delivers response.data as a raw JSON String
+  /// instead of a parsed Map. This helper normalises both forms.
+  Map<String, dynamic> _asMap(dynamic raw) {
+    if (raw is Map<String, dynamic>) return raw;
+    if (raw is String) return jsonDecode(raw) as Map<String, dynamic>;
+    throw FormatException('Unexpected response type: ${raw.runtimeType}');
+  }
+  // Use the platform-aware DioClient.baseUrl so physical-device builds
+  // reach 172.20.10.9 instead of device-loopback localhost.
+  late final Dio _dio = Dio(BaseOptions(
+    baseUrl: DioClient.baseUrl,
     connectTimeout: const Duration(seconds: 10),
     receiveTimeout: const Duration(seconds: 10),
     headers: {'Content-Type': 'application/json'},
@@ -16,12 +27,17 @@ class AuthRepository {
       'identifier': identifier,
       'password': password,
     });
-    final data = response.data['data'];
-    await _storage.write(key: 'access_token', value: data['accessToken']);
-    await _storage.write(key: 'refresh_token', value: data['refreshToken']);
-    await _storage.write(key: 'role', value: data['role']);
+    final body = _asMap(response.data);
+    final data = body['data'] as Map<String, dynamic>;
+    final userId = data['userId'] is int
+        ? data['userId'] as int
+        : int.tryParse(data['userId']?.toString() ?? '0') ?? 0;
+    await _storage.write(key: 'access_token', value: data['accessToken'] as String);
+    await _storage.write(key: 'refresh_token', value: data['refreshToken'] as String);
+    await _storage.write(key: 'role', value: data['role'] as String);
+    await _storage.write(key: 'user_id', value: userId.toString());
     await _storage.write(key: 'identifier', value: identifier);
-    return data;
+    return {...data, 'userId': userId};
   }
 
   Future<Map<String, dynamic>> register(String identifier, String password, String role) async {
@@ -30,12 +46,17 @@ class AuthRepository {
       'password': password,
       'role': role,
     });
-    final data = response.data['data'];
-    await _storage.write(key: 'access_token', value: data['accessToken']);
-    await _storage.write(key: 'refresh_token', value: data['refreshToken']);
-    await _storage.write(key: 'role', value: data['role']);
+    final body = _asMap(response.data);
+    final data = body['data'] as Map<String, dynamic>;
+    final userId = data['userId'] is int
+        ? data['userId'] as int
+        : int.tryParse(data['userId']?.toString() ?? '0') ?? 0;
+    await _storage.write(key: 'access_token', value: data['accessToken'] as String);
+    await _storage.write(key: 'refresh_token', value: data['refreshToken'] as String);
+    await _storage.write(key: 'role', value: data['role'] as String);
+    await _storage.write(key: 'user_id', value: userId.toString());
     await _storage.write(key: 'identifier', value: identifier);
-    return data;
+    return {...data, 'userId': userId};
   }
 
   Future<void> logout() async {
