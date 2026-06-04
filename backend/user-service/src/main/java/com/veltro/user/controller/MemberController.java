@@ -65,6 +65,16 @@ public class MemberController {
         return ResponseEntity.ok(ApiResponse.success("Member updated", memberService.update(id, req)));
     }
 
+    @Operation(summary = "Delete a member profile (admin only)")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> delete(
+            @PathVariable Long id,
+            @RequestHeader("X-User-Role") String role) {
+        requireAdmin(role);
+        memberService.delete(id);
+        return ResponseEntity.ok(ApiResponse.success("Member deleted"));
+    }
+
     @Operation(summary = "Upload member avatar")
     @PostMapping("/{id}/avatar")
     public ResponseEntity<ApiResponse<MemberResponse>> uploadAvatar(

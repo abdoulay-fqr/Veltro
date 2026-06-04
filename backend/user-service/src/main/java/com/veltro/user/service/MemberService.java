@@ -11,20 +11,28 @@ import com.veltro.user.exception.ConflictException;
 import com.veltro.user.exception.ResourceNotFoundException;
 import com.veltro.user.repository.MemberProfileRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class MemberService {
 
     private final MemberProfileRepository memberRepo;
     private final AvatarStorageService avatarStorage;
     private final RabbitTemplate rabbitTemplate;
+    private final RestTemplate restTemplate;
+
+    @Value("${auth-service.base-url:http://localhost:8081}")
+    private String authServiceBaseUrl;
 
     // ── CREATE ──────────────────────────────────────────────────────────────
 
@@ -97,6 +105,28 @@ public class MemberService {
         String url = avatarStorage.store(file, "member_" + id);
         member.setAvatarUrl(url);
         return MemberResponse.from(memberRepo.save(member));
+    }
+
+    // ── DELETE ───────────────────────────────────────────────────────────────
+
+    @Transactional
+    public void delete(Long id) {
+        MemberProfile member = getOrThrow(id);
+        Long userId = member.getUserId();
+
+        // nfc_card and health_profile both have ON DELETE CASCADE, so
+        // deleting the member_profile row cascades them automatically.
+        memberRepo.delete(member);
+
+        // Also remove the auth-service account so the user cannot log in again.
+        // Fire-and-forget: if auth-service is down the member profile is already
+        // gone, which is the important part.
+        try {
+            restTemplate.delete(authServiceBaseUrl + "/api/v1/auth/users/" + userId);
+        } catch (Exception e) {
+            log.warn("Member profile {} deleted but auth user {} could not be removed: {}",
+                    id, userId, e.getMessage());
+        }
     }
 
     // ── SUSPEND / ACTIVATE ───────────────────────────────────────────────────

@@ -257,6 +257,11 @@ export default function MembersPage() {
           onClose={() => setSelected(null)}
           onSuspend={handleSuspend}
           onActivate={handleActivate}
+          onDeleted={() => { setSelected(null); loadMembers(); }}
+          onUpdated={(updated) => {
+            setMembers((prev) => prev.map((m) => (m.id === updated.id ? updated : m)));
+            setSelected(null);
+          }}
         />
       )}
 

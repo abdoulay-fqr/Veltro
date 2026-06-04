@@ -48,6 +48,10 @@ export const membersApi = {
     return api.put<{ data: MemberResponse }>(`/users/members/${id}`, body);
   },
 
+  delete(id: number) {
+    return api.delete<{ data: null }>(`/users/members/${id}`);
+  },
+
   suspend(id: number) {
     return api.put<{ data: MemberResponse }>(`/users/members/${id}/suspend`);
   },

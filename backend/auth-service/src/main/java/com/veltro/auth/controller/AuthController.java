@@ -61,6 +61,12 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success("Token refreshed", response));
     }
 
+    @DeleteMapping("/users/{userId}")
+    public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable Long userId) {
+        authService.deleteUser(userId);
+        return ResponseEntity.ok(ApiResponse.success("User deleted"));
+    }
+
     @PostMapping("/change-password")
     public ResponseEntity<ApiResponse<Void>> changePassword(
             @Valid @RequestBody ChangePasswordRequest request,

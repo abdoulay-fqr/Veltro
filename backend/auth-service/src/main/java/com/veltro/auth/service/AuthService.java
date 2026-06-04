@@ -80,6 +80,10 @@ public class AuthService {
         tokenBlacklistService.blacklist(accessToken);
     }
 
+    public void deleteUser(Long userId) {
+        userRepository.findById(userId).ifPresent(userRepository::delete);
+    }
+
     public void changePassword(String identifier, String currentPassword, String newPassword) {
         AppUser user = userRepository.findByIdentifier(identifier)
                 .orElseThrow(() -> new RuntimeException("User not found"));
