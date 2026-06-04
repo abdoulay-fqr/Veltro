@@ -31,7 +31,7 @@ public class MemberService {
     private final RabbitTemplate rabbitTemplate;
     private final RestTemplate restTemplate;
 
-    @Value("${auth-service.base-url:http://localhost:8081}")
+    @Value("${AUTH_SERVICE_BASE_URL:http://localhost:8081}")
     private String authServiceBaseUrl;
 
     // ── CREATE ──────────────────────────────────────────────────────────────

@@ -191,6 +191,7 @@ services:
       SPRING_RABBITMQ_USERNAME: veltro
       SPRING_RABBITMQ_PASSWORD: veltro123
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      AUTH_SERVICE_BASE_URL: http://auth-service:8081
       APP_AVATAR_UPLOAD_DIR: /data/avatars
     volumes:
       - user-avatars:/data/avatars
