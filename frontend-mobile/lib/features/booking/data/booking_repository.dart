@@ -20,7 +20,7 @@ class BookingRepository {
     final dio = DioClient.instance;
     final res = await dio.post('/bookings', data: {
       'courseId': courseId,
-      if (memberEmail != null) 'memberEmail': memberEmail,
+      'memberEmail': ?memberEmail,
     });
     return res.data['data'] as Map<String, dynamic>;
   }

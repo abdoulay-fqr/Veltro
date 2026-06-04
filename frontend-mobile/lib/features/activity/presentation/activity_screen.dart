@@ -125,9 +125,9 @@ class _LowActivityBanner extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: const Color(0xFFFBBF24).withOpacity(0.15),
+          color: const Color(0xFFFBBF24).withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFFBBF24).withOpacity(0.3)),
+          border: Border.all(color: const Color(0xFFFBBF24).withValues(alpha: 0.3)),
         ),
         child: const Row(children: [
           Text('💪', style: TextStyle(fontSize: 18)),

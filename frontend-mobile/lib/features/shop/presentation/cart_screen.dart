@@ -38,8 +38,10 @@ class _CartScreenState extends ConsumerState<CartScreen> {
         context.pop();
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Order failed: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Order failed: $e')));
+      }
     } finally {
       if (mounted) setState(() => _placing = false);
     }

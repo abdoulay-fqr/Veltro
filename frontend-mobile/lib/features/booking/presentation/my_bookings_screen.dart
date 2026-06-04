@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/booking_repository.dart';
+import 'courses_screen.dart';
 
 final myBookingsProvider = FutureProvider.family<List<dynamic>, Map<String, dynamic>>((ref, args) async {
   return ref.read(bookingRepoProvider).getMyBookings(args['memberId'] as int, status: args['status'] as String?);

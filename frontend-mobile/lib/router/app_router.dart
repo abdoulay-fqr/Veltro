@@ -19,10 +19,10 @@ import '../features/chatbot/presentation/chatbot_screen.dart';
 final appRouter = GoRouter(
   initialLocation: '/',
   routes: [
-    GoRoute(path: '/', builder: (_, __) => const SplashScreen()),
-    GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
-    GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
-    GoRoute(path: '/home', builder: (_, __) => const HomeScreen()),
+    GoRoute(path: '/', builder: (_, _) => const SplashScreen()),
+    GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
+    GoRoute(path: '/register', builder: (_, _) => const RegisterScreen()),
+    GoRoute(path: '/home', builder: (_, _) => const HomeScreen()),
     GoRoute(
       path: '/profile/:id',
       builder: (context, state) {
@@ -30,7 +30,7 @@ final appRouter = GoRouter(
         return ProfileScreen(memberProfileId: id);
       },
     ),
-    GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),
+    GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
     GoRoute(
       path: '/subscription/:id',
       builder: (context, state) {
@@ -38,7 +38,7 @@ final appRouter = GoRouter(
         return SubscriptionScreen(memberProfileId: id);
       },
     ),
-    GoRoute(path: '/courses', builder: (_, __) => const CoursesScreen()),
+    GoRoute(path: '/courses', builder: (_, _) => const CoursesScreen()),
     GoRoute(
       path: '/my-bookings/:memberId',
       builder: (context, state) {
@@ -53,7 +53,7 @@ final appRouter = GoRouter(
         return ActivityScreen(memberProfileId: id);
       },
     ),
-    GoRoute(path: '/chats', builder: (_, __) => const ChatsScreen()),
+    GoRoute(path: '/chats', builder: (_, _) => const ChatsScreen()),
     GoRoute(
       path: '/chat/:id',
       builder: (context, state) {
@@ -61,11 +61,11 @@ final appRouter = GoRouter(
         return ChatScreen(conversationId: id);
       },
     ),
-    GoRoute(path: '/shop', builder: (_, __) => const ShopScreen()),
-    GoRoute(path: '/cart', builder: (_, __) => const CartScreen()),
-    GoRoute(path: '/chatbot', builder: (_, __) => const ChatbotScreen()),
-    GoRoute(path: '/dashboard', builder: (_, __) => const _PlaceholderScreen(title: 'Dashboard')),
-    GoRoute(path: '/coach', builder: (_, __) => const _PlaceholderScreen(title: 'Coach Portal')),
+    GoRoute(path: '/shop', builder: (_, _) => const ShopScreen()),
+    GoRoute(path: '/cart', builder: (_, _) => const CartScreen()),
+    GoRoute(path: '/chatbot', builder: (_, _) => const ChatbotScreen()),
+    GoRoute(path: '/dashboard', builder: (_, _) => const _PlaceholderScreen(title: 'Dashboard')),
+    GoRoute(path: '/coach', builder: (_, _) => const _PlaceholderScreen(title: 'Coach Portal')),
   ],
 );
 

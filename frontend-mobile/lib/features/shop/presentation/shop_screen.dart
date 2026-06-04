@@ -157,7 +157,7 @@ class _ProductCard extends StatelessWidget {
           child: product['imageUrl'] != null
               ? Image.network(product['imageUrl'] as String,
                   height: 110, width: double.infinity, fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(height: 110, color: const Color(0xFF2A2A2A),
+                  errorBuilder: (_, _, _) => Container(height: 110, color: const Color(0xFF2A2A2A),
                       child: const Icon(Icons.image_not_supported, color: Colors.white24)))
               : Container(height: 110, color: const Color(0xFF2A2A2A),
                   child: const Icon(Icons.shopping_bag_outlined, color: Colors.white24, size: 40)),

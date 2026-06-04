@@ -253,7 +253,7 @@ class _WelcomeView extends StatelessWidget {
             Container(
               width: 72, height: 72,
               decoration: BoxDecoration(
-                color: const Color(0xFF0D9488).withOpacity(0.15),
+                color: const Color(0xFF0D9488).withValues(alpha: 0.15),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.smart_toy_outlined, color: Color(0xFF0D9488), size: 36),
@@ -276,9 +276,9 @@ class _WelcomeView extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                   decoration: BoxDecoration(
-                    border: Border.all(color: const Color(0xFF0D9488).withOpacity(0.4)),
+                    border: Border.all(color: const Color(0xFF0D9488).withValues(alpha: 0.4)),
                     borderRadius: BorderRadius.circular(20),
-                    color: const Color(0xFF0D9488).withOpacity(0.08),
+                    color: const Color(0xFF0D9488).withValues(alpha: 0.08),
                   ),
                   child: Text(chip,
                       style: const TextStyle(color: Color(0xFF0D9488), fontSize: 13)),
@@ -338,7 +338,7 @@ class _MessageBubbleState extends State<_MessageBubble> {
             Container(
               width: 28, height: 28,
               decoration: BoxDecoration(
-                color: const Color(0xFF0D9488).withOpacity(0.15),
+                color: const Color(0xFF0D9488).withValues(alpha: 0.15),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.smart_toy_outlined, color: Color(0xFF0D9488), size: 16),
@@ -360,7 +360,7 @@ class _MessageBubbleState extends State<_MessageBubble> {
               child: Text(
                 isUser ? widget.message.content : _displayed,
                 style: TextStyle(
-                  color: isUser ? Colors.white : Colors.white.withOpacity(0.87),
+                  color: isUser ? Colors.white : Colors.white.withValues(alpha: 0.87),
                   fontSize: 14,
                   height: 1.4,
                 ),
@@ -402,15 +402,15 @@ class _ThinkingBubbleState extends State<_ThinkingBubble>
             Container(
               width: 28, height: 28,
               decoration: BoxDecoration(
-                color: const Color(0xFF0D9488).withOpacity(0.15),
+                color: const Color(0xFF0D9488).withValues(alpha: 0.15),
                 shape: BoxShape.circle,
               ),
               child: AnimatedBuilder(
                 animation: _ctrl,
-                builder: (_, __) => Icon(
+                builder: (_, _) => Icon(
                   Icons.smart_toy_outlined,
                   color: Color.lerp(const Color(0xFF0D9488),
-                      const Color(0xFF0D9488).withOpacity(0.3), _ctrl.value),
+                      const Color(0xFF0D9488).withValues(alpha: 0.3), _ctrl.value),
                   size: 16,
                 ),
               ),
@@ -431,7 +431,7 @@ class _ThinkingBubbleState extends State<_ThinkingBubble>
                 mainAxisSize: MainAxisSize.min,
                 children: List.generate(3, (i) => AnimatedBuilder(
                   animation: _ctrl,
-                  builder: (_, __) {
+                  builder: (_, _) {
                     final delay = i / 3;
                     final t = ((_ctrl.value - delay) % 1.0).clamp(0.0, 1.0);
                     return Padding(

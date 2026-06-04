@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'subscription_notifier.dart';
 
 class SubscriptionScreen extends ConsumerStatefulWidget {
@@ -95,9 +94,9 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                       margin: const EdgeInsets.only(bottom: 16),
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF7C3AED).withOpacity(0.15),
+                        color: const Color(0xFF7C3AED).withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFF7C3AED).withOpacity(0.3)),
+                        border: Border.all(color: const Color(0xFF7C3AED).withValues(alpha: 0.3)),
                       ),
                       child: Row(
                         children: [
@@ -217,7 +216,7 @@ class _PlanCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: statusColor.withOpacity(0.15),
+                color: statusColor.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(status,
@@ -313,7 +312,7 @@ class _PauseResumeButton extends ConsumerWidget {
         }
       },
       style: OutlinedButton.styleFrom(
-        side: BorderSide(color: isPaused ? Colors.green.withOpacity(0.4) : Colors.orange.withOpacity(0.4)),
+        side: BorderSide(color: isPaused ? Colors.green.withValues(alpha: 0.4) : Colors.orange.withValues(alpha: 0.4)),
         foregroundColor: isPaused ? Colors.green : Colors.orange,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         padding: const EdgeInsets.symmetric(vertical: 14),

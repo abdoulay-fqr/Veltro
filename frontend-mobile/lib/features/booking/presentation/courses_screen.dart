@@ -123,7 +123,6 @@ class _CourseCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final available = (course['availableSpots'] as int? ?? 0);
-    final capacity = (course['capacity'] as int? ?? 1);
     final fillRate = (course['fillRate'] as double? ?? 0.0);
     final dateTime = course['dateTime'] != null ? DateTime.parse(course['dateTime'].toString()) : DateTime.now();
 
@@ -138,7 +137,7 @@ class _CourseCard extends StatelessWidget {
             Expanded(child: Text(course['name'] ?? '', style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600))),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(color: _levelColor(course['level']?.toString()).withOpacity(0.15), borderRadius: BorderRadius.circular(20)),
+              decoration: BoxDecoration(color: _levelColor(course['level']?.toString()).withValues(alpha: 0.15), borderRadius: BorderRadius.circular(20)),
               child: Text(course['level'] ?? '', style: TextStyle(color: _levelColor(course['level']?.toString()), fontSize: 11, fontWeight: FontWeight.w600)),
             ),
           ]),
