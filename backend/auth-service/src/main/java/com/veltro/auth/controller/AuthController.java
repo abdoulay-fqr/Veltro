@@ -8,6 +8,7 @@ import com.veltro.auth.dto.RegisterRequest;
 import com.veltro.auth.service.AuthService;
 import com.veltro.auth.service.LoginRateLimiterService;
 import com.veltro.common.dto.ApiResponse;
+import com.veltro.common.util.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -20,10 +21,12 @@ public class AuthController {
 
     private final AuthService authService;
     private final LoginRateLimiterService rateLimiter;
+    private final JwtUtil jwtUtil;
 
-    public AuthController(AuthService authService, LoginRateLimiterService rateLimiter) {
+    public AuthController(AuthService authService, LoginRateLimiterService rateLimiter, JwtUtil jwtUtil) {
         this.authService = authService;
         this.rateLimiter = rateLimiter;
+        this.jwtUtil = jwtUtil;
     }
 
     @PostMapping("/register")
@@ -61,8 +64,12 @@ public class AuthController {
     @PostMapping("/change-password")
     public ResponseEntity<ApiResponse<Void>> changePassword(
             @Valid @RequestBody ChangePasswordRequest request,
-            @RequestHeader("X-User-Id") Long userId) {
-        authService.changePassword(userId, request.getCurrentPassword(), request.getNewPassword());
+            @RequestHeader("Authorization") String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new RuntimeException("Authorization header is required");
+        }
+        String identifier = jwtUtil.extractSubject(authHeader.substring(7));
+        authService.changePassword(identifier, request.getCurrentPassword(), request.getNewPassword());
         return ResponseEntity.ok(ApiResponse.success("Password changed successfully"));
     }
 

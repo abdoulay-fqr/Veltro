@@ -80,8 +80,8 @@ public class AuthService {
         tokenBlacklistService.blacklist(accessToken);
     }
 
-    public void changePassword(Long userId, String currentPassword, String newPassword) {
-        AppUser user = userRepository.findById(userId)
+    public void changePassword(String identifier, String currentPassword, String newPassword) {
+        AppUser user = userRepository.findByIdentifier(identifier)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
