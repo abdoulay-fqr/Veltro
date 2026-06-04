@@ -33,11 +33,14 @@ export default function CoursesPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await coursesApi.list({ size: 100 });
+      // For COACH role, filter by their userId (booking-service stores coachId = X-User-Id)
+      const params: Parameters<typeof coursesApi.list>[0] = { size: 100 };
+      if (user?.role === "COACH" && user.userId) params.coachId = user.userId;
+      const res = await coursesApi.list(params);
       setCourses(res.data.data?.content ?? []);
     } catch { toast.error("Failed to load courses"); }
     finally { setLoading(false); }
-  }, []);
+  }, [user]);
 
   useEffect(() => { load(); }, [load]);
 

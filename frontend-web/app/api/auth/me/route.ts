@@ -28,8 +28,15 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ message: "Token expired" }, { status: 401 });
   }
 
+  // userId is set as a custom JWT claim by the auth-service
+  const rawUserId = payload.userId;
+  const userId = typeof rawUserId === "number"
+    ? rawUserId
+    : typeof rawUserId === "string" ? parseInt(rawUserId, 10) || undefined : undefined;
+
   return NextResponse.json({
     identifier: payload.sub,
     role: payload.role,
+    userId,
   });
 }

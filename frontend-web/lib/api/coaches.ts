@@ -29,6 +29,11 @@ export interface CreateCoachRequest {
 }
 
 export const coachesApi = {
+  // Returns the coach profile for the currently authenticated coach (uses X-User-Id header)
+  getMe() {
+    return api.get<{ data: CoachResponse }>("/users/coaches/me");
+  },
+
   list(params?: { status?: string; page?: number; size?: number }) {
     return api.get<{ data: PageResponse<CoachResponse> }>("/users/coaches", { params });
   },

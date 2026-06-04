@@ -7,6 +7,7 @@ export type UserRole = "ADMIN" | "SUPER_ADMIN" | "COACH" | "MEMBER";
 export interface AuthUser {
   identifier: string;
   role: UserRole;
+  userId?: number;
 }
 
 export interface AuthContextType {
@@ -31,7 +32,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
     fetch("/api/auth/me")
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (data) setUser({ identifier: data.identifier, role: data.role });
+        if (data) setUser({ identifier: data.identifier, role: data.role, userId: data.userId });
       })
       .catch(() => {})
       .finally(() => setLoading(false));

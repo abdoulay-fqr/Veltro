@@ -45,22 +45,24 @@ export default function CoachProfilePage() {
 
   useEffect(() => {
     if (!user) return;
-    // Derive coachId from X-User-Id header by fetching the coach matching the logged-in user
-    // For now we search the coaches list — in production this would be /api/v1/users/coaches/me
-    coachesApi.list({ size: 200 }).then((res) => {
-      const found = res.data.data?.content?.find(() => true); // placeholder until /me endpoint
-      if (found) {
-        setCoach(found);
-        profileForm.reset({
-          firstname: found.firstname,
-          lastname: found.lastname,
-          phone: found.phone ?? "",
-          bio: found.bio ?? "",
-          specialization: found.specialization ?? "",
-          certifications: found.certifications ?? "",
-        });
-      }
-    });
+    coachesApi.getMe()
+      .then((res) => {
+        const found = res.data.data;
+        if (found) {
+          setCoach(found);
+          profileForm.reset({
+            firstname: found.firstname,
+            lastname: found.lastname,
+            phone: found.phone ?? "",
+            bio: found.bio ?? "",
+            specialization: found.specialization ?? "",
+            certifications: found.certifications ?? "",
+          });
+        }
+      })
+      .catch(() => {
+        toast.error("Failed to load coach profile");
+      });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
@@ -118,7 +120,7 @@ export default function CoachProfilePage() {
         <div className="relative">
           {avatarPreview || coach.avatarUrl ? (
             <img
-              src={avatarPreview ?? `http://localhost:8082${coach.avatarUrl}`}
+              src={avatarPreview ?? `${process.env.NEXT_PUBLIC_USER_SERVICE_URL ?? "http://localhost:8082"}${coach.avatarUrl}`}
               alt="avatar"
               className="w-20 h-20 rounded-full object-cover border-2 border-zinc-200"
             />

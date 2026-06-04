@@ -29,10 +29,18 @@ export default function AttendancePage() {
   const loadCourses = useCallback(async () => {
     try {
       const today = new Date().toISOString().split("T")[0];
-      const res = await coursesApi.list({ from: today + "T00:00:00", to: today + "T23:59:59", status: "SCHEDULED", size: 50 });
+      // For COACH role, filter to only their own courses (booking-service coachId = X-User-Id)
+      const params: Parameters<typeof coursesApi.list>[0] = {
+        from: today + "T00:00:00",
+        to: today + "T23:59:59",
+        status: "SCHEDULED",
+        size: 50,
+      };
+      if (user?.role === "COACH" && user.userId) params.coachId = user.userId;
+      const res = await coursesApi.list(params);
       setCourses(res.data.data?.content ?? []);
     } catch { toast.error("Failed to load courses"); }
-  }, []);
+  }, [user]);
 
   useEffect(() => { loadCourses(); }, [loadCourses]);
 

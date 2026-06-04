@@ -51,6 +51,13 @@ public class CoachController {
         return ResponseEntity.ok(ApiResponse.success(page));
     }
 
+    @Operation(summary = "Get the coach profile for the currently authenticated coach")
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<CoachResponse>> getMe(
+            @RequestHeader("X-User-Id") Long userId) {
+        return ResponseEntity.ok(ApiResponse.success(coachService.findByUserId(userId)));
+    }
+
     @Operation(summary = "Get coach by ID")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<CoachResponse>> findById(@PathVariable Long id) {
