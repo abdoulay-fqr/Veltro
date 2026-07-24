@@ -24,106 +24,108 @@ class HomeScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Hello, ${auth.identifier?.split('@').first ?? 'Member'} 👋',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              auth.role == 'MEMBER' ? 'Welcome back to your gym' : 'Manage your coaching',
-              style: const TextStyle(color: Colors.white54, fontSize: 14),
-            ),
-            const SizedBox(height: 32),
-            _QuickAction(
-              icon: Icons.person_outline,
-              title: 'My Profile',
-              subtitle: 'Edit your info and health data',
-              onTap: () => context.push('/profile/1'),
-            ),
-            const SizedBox(height: 12),
-            _QuickAction(
-              icon: Icons.card_membership_outlined,
-              title: 'My Subscription',
-              subtitle: 'View plan, invoices and billing',
-              onTap: () => context.push('/subscription/1'),
-            ),
-            const SizedBox(height: 12),
-            _QuickAction(
-              icon: Icons.fitness_center_outlined,
-              title: 'Classes',
-              subtitle: 'Browse and book gym sessions',
-              onTap: () => context.push('/courses'),
-            ),
-            const SizedBox(height: 12),
-            _QuickAction(
-              icon: Icons.bar_chart_outlined,
-              title: 'My Performance',
-              subtitle: 'Stats, streak, and personal records',
-              onTap: () => context.push('/activity/1'),
-            ),
-            const SizedBox(height: 12),
-            _QuickAction(
-              icon: Icons.calendar_today_outlined,
-              title: 'My Bookings',
-              subtitle: 'Upcoming, past, and cancelled',
-              onTap: () => context.push('/my-bookings/1'),
-            ),
-            const SizedBox(height: 12),
-            _QuickAction(
-              icon: Icons.smart_toy_outlined,
-              title: 'AI Assistant',
-              subtitle: 'Ask Veltro about anything',
-              onTap: () => context.push('/chatbot'),
-            ),
-            const SizedBox(height: 12),
-            _QuickAction(
-              icon: Icons.chat_bubble_outline,
-              title: 'Messages',
-              subtitle: 'Chat with your coach',
-              onTap: () => context.push('/chats'),
-            ),
-            const SizedBox(height: 12),
-            _QuickAction(
-              icon: Icons.shopping_bag_outlined,
-              title: 'Shop',
-              subtitle: 'Supplements, clothing, equipment',
-              onTap: () => context.push('/shop'),
-            ),
-            const SizedBox(height: 12),
-            _QuickAction(
-              icon: Icons.settings_outlined,
-              title: 'Settings',
-              subtitle: 'Notifications, password, account',
-              onTap: () => context.push('/settings'),
-            ),
-            const Spacer(),
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: OutlinedButton(
-                onPressed: () async {
-                  await ref.read(authNotifierProvider.notifier).logout();
-                  if (context.mounted) context.go('/login');
-                },
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Colors.white24),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  foregroundColor: Colors.white54,
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Hello, ${auth.identifier?.split('@').first ?? 'Member'} 👋',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w600,
                 ),
-                child: const Text('Sign Out'),
               ),
-            ),
-            const SizedBox(height: 20),
-          ],
+              const SizedBox(height: 6),
+              Text(
+                auth.role == 'MEMBER' ? 'Welcome back to your gym' : 'Manage your coaching',
+                style: const TextStyle(color: Colors.white54, fontSize: 14),
+              ),
+              const SizedBox(height: 32),
+              _QuickAction(
+                icon: Icons.person_outline,
+                title: 'My Profile',
+                subtitle: 'Edit your info and health data',
+                onTap: () => context.push('/profile/1'),
+              ),
+              const SizedBox(height: 12),
+              _QuickAction(
+                icon: Icons.card_membership_outlined,
+                title: 'My Subscription',
+                subtitle: 'View plan, invoices and billing',
+                onTap: () => context.push('/subscription/1'),
+              ),
+              const SizedBox(height: 12),
+              _QuickAction(
+                icon: Icons.fitness_center_outlined,
+                title: 'Classes',
+                subtitle: 'Browse and book gym sessions',
+                onTap: () => context.push('/courses'),
+              ),
+              const SizedBox(height: 12),
+              _QuickAction(
+                icon: Icons.bar_chart_outlined,
+                title: 'My Performance',
+                subtitle: 'Stats, streak, and personal records',
+                onTap: () => context.push('/activity/1'),
+              ),
+              const SizedBox(height: 12),
+              _QuickAction(
+                icon: Icons.calendar_today_outlined,
+                title: 'My Bookings',
+                subtitle: 'Upcoming, past, and cancelled',
+                onTap: () => context.push('/my-bookings/1'),
+              ),
+              const SizedBox(height: 12),
+              _QuickAction(
+                icon: Icons.smart_toy_outlined,
+                title: 'AI Assistant',
+                subtitle: 'Ask Veltro about anything',
+                onTap: () => context.push('/chatbot'),
+              ),
+              const SizedBox(height: 12),
+              _QuickAction(
+                icon: Icons.chat_bubble_outline,
+                title: 'Messages',
+                subtitle: 'Chat with your coach',
+                onTap: () => context.push('/chats'),
+              ),
+              const SizedBox(height: 12),
+              _QuickAction(
+                icon: Icons.shopping_bag_outlined,
+                title: 'Shop',
+                subtitle: 'Supplements, clothing, equipment',
+                onTap: () => context.push('/shop'),
+              ),
+              const SizedBox(height: 12),
+              _QuickAction(
+                icon: Icons.settings_outlined,
+                title: 'Settings',
+                subtitle: 'Notifications, password, account',
+                onTap: () => context.push('/settings'),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: OutlinedButton(
+                  onPressed: () async {
+                    await ref.read(authNotifierProvider.notifier).logout();
+                    if (context.mounted) context.go('/login');
+                  },
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Colors.white24),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    foregroundColor: Colors.white54,
+                  ),
+                  child: const Text('Sign Out'),
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
         ),
       ),
     );

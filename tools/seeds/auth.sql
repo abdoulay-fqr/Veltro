@@ -12,7 +12,7 @@ SET FOREIGN_KEY_CHECKS = 1;
 
 -- BCrypt(10) hash of "Veltro@2024"
 -- Regenerate with: new BCryptPasswordEncoder(10).encode("Veltro@2024")
-SET @pwd = '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy';
+SET @pwd = '$2a$10$kl98sJu9.yJXuhzHApqEE.3tDU0xgmRh5bfHN57z3FdW6YYyE2ywO';
 
 -- Members (IDs 1-10)
 INSERT INTO app_user (id, identifier, password, role) VALUES

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1069963301951",
+    "project_id": "veltro-aberux",
+    "storage_bucket": "veltro-aberux.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1069963301951:android:e9b24aeed0465cbcdd548a",
+        "android_client_info": {
+          "package_name": "com.veltro.veltro_mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD-AwM1GOVqBeGlanMjsNAAR9jBrc7cFGE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
